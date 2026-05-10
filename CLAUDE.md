@@ -230,7 +230,7 @@ When testing a child component that uses `inject`, supply the injected values vi
 src/
   main.js                    # app entry point
   App.vue                    # root component; owns state, provides it to the tree
-  index.css                  # global styles (Tailwind directives)
+  styles.css                 # global styles (Tailwind directives)
   composables/
     useAppState.js            # state factory + mutation functions
 ```

@@ -25,7 +25,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** the user can click "Import", choose an image file from disk, and see the image rendered on the page.
 
 ### 3. Crop UI — corner handles
-- [ ] **Crop UI — corner handles**
+- [x] **Crop UI — corner handles**
 
   Overlay a crop rectangle on the imported image with four filled-square drag handles, one at each corner. The rectangle is initialised to cover the full image. The user can drag any corner handle freely (no fixed aspect ratio) to reshape the crop region. The rectangle and handles should remain constrained within the image bounds. Implement this as a dedicated `CropOverlay` component with unit tests covering handle dragging logic.
 
