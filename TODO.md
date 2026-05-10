@@ -18,7 +18,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 2 — Image import and crop
 
 ### 2. Import image
-- [ ] **Import image**
+- [x] **Import image**
 
   Implement a button labelled "Import" that opens the native file-selection dialog filtered to image files. When the user selects a file, read it as a base64-encoded data URL using `FileReader` and store it in reactive application state. The image should be immediately displayed on screen at its natural size so the user can see it before cropping.
 

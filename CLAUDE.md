@@ -213,13 +213,26 @@ No other SVG elements or path commands should be generated.
 
 `vite.config.js` defines `@` as a path alias for `./src`, so imports can use `@/components/Foo.vue` instead of relative paths.
 
+## State management
+
+Application state is managed via a **composable-as-store + provide/inject** pattern:
+
+- `useAppState()` creates and returns a fresh `reactive` state object together with named mutation functions (e.g. `setImageBase64`). No module-level singleton — each call produces its own independent state.
+- `App.vue` is the sole caller of `useAppState()`. It holds the returned `state` and mutation functions, then `provide`s them to the component tree.
+- Child components `inject` only what they need — the `state` object for reading, or specific mutation functions for writing. Children never call `useAppState()` directly.
+- This keeps `useAppState` independently testable (call it, get state + mutations, assert — no component mounting needed) and keeps `App.vue` as a thin wiring layer.
+
+When testing a child component that uses `inject`, supply the injected values via `global.provide` in the `mount` options rather than relying on a parent component.
+
 ## Project structure
 
 ```
 src/
-  main.js        # app entry point
-  App.vue        # root component
-  index.css      # global styles (Tailwind directives)
+  main.js                    # app entry point
+  App.vue                    # root component; owns state, provides it to the tree
+  index.css                  # global styles (Tailwind directives)
+  composables/
+    useAppState.js            # state factory + mutation functions
 ```
 
 Components, composables, and utilities are added under `src/` as the feature grows, co-located with their `.spec.js` test files.
