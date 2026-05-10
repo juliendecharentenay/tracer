@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 
 export function useAppState() {
   const state = reactive({
-    image: { base64: null, crop: null },
+    image: { base64: null, crop: null, rect: null },
     canvas: {
       parameters: null,
       svg: { points: [], controlPoints: [], paths: [] },
@@ -13,5 +13,10 @@ export function useAppState() {
     state.image.base64 = base64
   }
 
-  return { state, setImageBase64 }
+  function setCropResult(croppedBase64, rect) {
+    state.image.crop = { base64: croppedBase64 };
+    state.image.rect = rect;
+  }
+
+  return { state, setImageBase64, setCropResult }
 }

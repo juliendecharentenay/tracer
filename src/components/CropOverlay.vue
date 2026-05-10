@@ -76,6 +76,8 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', onDragMove)
   document.removeEventListener('mouseup', onDragEnd)
 })
+
+defineExpose({ svgRect })
 </script>
 
 <template>

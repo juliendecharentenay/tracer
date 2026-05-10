@@ -32,7 +32,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** all four corner handles can be independently dragged to reposition that corner of the crop rectangle.
 
 ### 4. Crop confirmation
-- [ ] **Crop confirmation**
+- [x] **Crop confirmation**
 
   Add a "Crop" button in the bottom-right of the screen. When clicked, it reads the current crop-rectangle coordinates, crops the displayed image to that region (client-side, using a `<canvas>` element), encodes the result as a base64 string, and stores it in application state under `image.crop`. The crop UI is then dismissed and the application transitions to the canvas-setup phase.
 

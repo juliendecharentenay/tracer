@@ -122,6 +122,17 @@ describe('CropOverlay', () => {
     expect(Number(rect.attributes('height'))).toBeGreaterThanOrEqual(10)
   })
 
+  it('exposes svgRect reflecting the current crop rectangle', async () => {
+    wrapper = mountOverlay()
+    mockBoundingRect(wrapper)
+    await dragHandle(wrapper, 'br', 400, 300)
+    const { svgRect } = wrapper.vm
+    expect(svgRect.x).toBe(0)
+    expect(svgRect.y).toBe(0)
+    expect(svgRect.width).toBe(400)
+    expect(svgRect.height).toBe(300)
+  })
+
   it('stops tracking position after mouseup', async () => {
     wrapper = mountOverlay()
     mockBoundingRect(wrapper)
