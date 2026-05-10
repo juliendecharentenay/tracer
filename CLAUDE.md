@@ -39,9 +39,10 @@ This project uses **test-driven development (TDD)**. Write a failing test before
 
 ### 2. Canvas configuration
 
-5. The user can reposition and resize the SVG canvas outline over the background image.
-6. The user selects the `viewBox` width and height values. The SVG canvas outline maintains the same aspect ratio as the chosen viewBox dimensions.
-7. The user approves the configuration to proceed to tracing.
+5. The cropped image is displayed maintaining its aspect ratio, sized to fit within 80 % of the viewport width and 80 % of the viewport height (whichever constraint is tighter), and fully visible on screen.
+6. An `<svg>` canvas overlay is rendered on top of the image, covering it exactly. It is not repositionable or resizable — it always matches the displayed image dimensions.
+7. The user sets the `viewBox` width. The height is derived automatically to match the cropped image's aspect ratio (`height = width × imageHeight / imageWidth`). There is no separate height input.
+8. The user approves the configuration to proceed to tracing.
 
 ### 3. Tracing — adding lines
 
@@ -199,7 +200,7 @@ Application state is persisted to `localStorage` (Web Storage API) as a JSON str
 
 - `image.base64` holds the raw uploaded image encoded as a base64 string.
 - `image.crop` holds the crop parameters applied to the image.
-- `canvas.parameters` holds the canvas position, size, and viewBox configuration.
+- `canvas.parameters` holds the viewBox configuration (width and derived height).
 - `canvas.svg` mirrors the in-memory data structure (`points`, `controlPoints`, and `paths` arrays).
 
 ## SVG output constraints
@@ -224,6 +225,15 @@ Application state is managed via a **composable-as-store + provide/inject** patt
 
 When testing a child component that uses `inject`, supply the injected values via `global.provide` in the `mount` options rather than relying on a parent component.
 
+## Window size
+
+Reactive viewport dimensions are provided by `useWindowSize()` (`src/composables/useWindowSize.js`):
+
+- Returns `{ innerWidth, innerHeight, onResize }` — all plain `ref`s plus an event handler.
+- The composable has no side effects itself. `App.vue` attaches the handler: `onMounted(() => window.addEventListener('resize', onResize))` and removes it in `onUnmounted`.
+- `App.vue` `provide`s `innerWidth` and `innerHeight` to the tree so any child can `inject` them and react to viewport changes without coupling to the DOM directly.
+- Because the composable is free of lifecycle hooks it can be called and tested standalone — pass `onResize` in tests rather than firing a real browser event.
+
 ## Project structure
 
 ```
@@ -233,6 +243,13 @@ src/
   styles.css                 # global styles (Tailwind directives)
   composables/
     useAppState.js            # state factory + mutation functions
+    useWindowSize.js          # reactive innerWidth/innerHeight + onResize handler
+  components/
+    ImportButton.vue          # file-input trigger; reads image as base64
+    CropOverlay.vue           # draggable corner-handle crop rectangle over the imported image
+    CanvasArea.vue            # displays the cropped image sized to 80 % of the viewport
+  utils/
+    cropImage.js              # canvas-based client-side image cropping utility
 ```
 
 Components, composables, and utilities are added under `src/` as the feature grows, co-located with their `.spec.js` test files.

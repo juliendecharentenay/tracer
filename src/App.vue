@@ -1,15 +1,23 @@
 <script setup>
-import { provide, ref } from 'vue'
+import { provide, ref, onMounted, onUnmounted } from 'vue'
 import { useAppState } from '@/composables/useAppState'
+import { useWindowSize } from '@/composables/useWindowSize'
 import { cropImage } from '@/utils/cropImage'
 import ImportButton from '@/components/ImportButton.vue'
 import CropOverlay from '@/components/CropOverlay.vue'
+import CanvasArea from '@/components/CanvasArea.vue'
 
 const { state, setImageBase64, setCropResult } = useAppState()
+const { innerWidth, innerHeight, onResize } = useWindowSize()
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
 provide('setCropResult', setCropResult)
+provide('innerWidth', innerWidth)
+provide('innerHeight', innerHeight)
+
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
 
 const imageRef = ref(null)
 const imageDimensions = ref(null)
@@ -56,12 +64,6 @@ async function onCrop() {
       </button>
     </div>
 
-    <div v-else class="relative inline-block">
-      <img
-        :src="state.image.crop.base64"
-        alt="Cropped image"
-        class="block"
-      />
-    </div>
+    <CanvasArea v-else :src="state.image.crop.base64" />
   </div>
 </template>
