@@ -40,5 +40,12 @@ const displaySize = computed(() => {
       :style="displaySize ? { width: displaySize.width + 'px', height: displaySize.height + 'px' } : {}"
       @load="onLoad"
     />
+    <svg
+      v-if="displaySize"
+      id="canvas"
+      class="absolute top-0 left-0 pointer-events-none"
+      :width="displaySize.width"
+      :height="displaySize.height"
+    />
   </div>
 </template>

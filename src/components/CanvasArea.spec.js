@@ -57,6 +57,34 @@ describe('CanvasArea', () => {
     expect(style).toContain('height: 640px')
   })
 
+  it('does not render an svg before the image loads', () => {
+    expect(createWrapper().find('svg').exists()).toBe(false)
+  })
+
+  it('renders an svg with id="canvas" after the image loads', async () => {
+    const wrapper = createWrapper()
+    await loadImage(wrapper, 1000, 500)
+    expect(wrapper.find('svg#canvas').exists()).toBe(true)
+  })
+
+  it('gives the svg the same pixel dimensions as the displayed image', async () => {
+    // 1000x500 image, viewport 1000x800 → display 800×400
+    const wrapper = createWrapper(1000, 800)
+    await loadImage(wrapper, 1000, 500)
+    const svg = wrapper.find('svg')
+    expect(svg.attributes('width')).toBe('800')
+    expect(svg.attributes('height')).toBe('400')
+  })
+
+  it('positions the svg absolutely over the image', async () => {
+    const wrapper = createWrapper()
+    await loadImage(wrapper, 1000, 500)
+    const svg = wrapper.find('svg')
+    expect(svg.classes()).toContain('absolute')
+    expect(svg.classes()).toContain('top-0')
+    expect(svg.classes()).toContain('left-0')
+  })
+
   it('recalculates dimensions reactively when innerWidth changes', async () => {
     const innerWidth  = ref(1000)
     const innerHeight = ref(800)

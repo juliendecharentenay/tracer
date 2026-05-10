@@ -50,7 +50,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** after cropping, the cropped image is visible with correct aspect ratio, fully on-screen, and occupies at most 80 % of both the viewport width and height.
 
 ### 6. SVG canvas overlay
-- [ ] **SVG canvas overlay**
+- [x] **SVG canvas overlay**
 
   Render an `<svg>` element overlaid on the background image, sized to cover the image exactly (same pixel width and height). This SVG is the drawing canvas for all tracing work; it is not draggable or resizable — it always matches the image dimensions.
 
