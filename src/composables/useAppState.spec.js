@@ -24,4 +24,24 @@ describe('useAppState', () => {
     expect(state.image.rect.width).toBe(100)
     expect(state.image.rect.height).toBe(80)
   })
+
+  it('initialises canvas.parameters as null', () => {
+    const { state } = useAppState()
+    expect(state.canvas.parameters).toBeNull()
+  })
+
+  it('setCanvasParameters stores width and height', () => {
+    const { state, setCanvasParameters } = useAppState()
+    setCanvasParameters(1000, 562)
+    expect(state.canvas.parameters.width).toBe(1000)
+    expect(state.canvas.parameters.height).toBe(562)
+  })
+
+  it('setCanvasParameters overwrites previous values', () => {
+    const { state, setCanvasParameters } = useAppState()
+    setCanvasParameters(800, 450)
+    setCanvasParameters(1200, 675)
+    expect(state.canvas.parameters.width).toBe(1200)
+    expect(state.canvas.parameters.height).toBe(675)
+  })
 })

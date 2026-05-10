@@ -57,7 +57,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** the SVG canvas overlay covers the background image precisely; no repositioning or resizing controls are present.
 
 ### 7. ViewBox configuration
-- [ ] **ViewBox configuration**
+- [x] **ViewBox configuration**
 
   Provide a numeric input for the SVG `viewBox` width. The height is derived automatically to preserve the same aspect ratio as the cropped image (`height = width * imageHeight / imageWidth`), so there is no separate height input. Store the chosen width (and computed height) in canvas state. Default to a sensible initial width (e.g. 1000).
 

@@ -6,13 +6,15 @@ import { cropImage } from '@/utils/cropImage'
 import ImportButton from '@/components/ImportButton.vue'
 import CropOverlay from '@/components/CropOverlay.vue'
 import CanvasArea from '@/components/CanvasArea.vue'
+import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
 
-const { state, setImageBase64, setCropResult } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
 provide('setCropResult', setCropResult)
+provide('setCanvasParameters', setCanvasParameters)
 provide('innerWidth', innerWidth)
 provide('innerHeight', innerHeight)
 
@@ -64,6 +66,9 @@ async function onCrop() {
       </button>
     </div>
 
-    <CanvasArea v-else :src="state.image.crop.base64" />
+    <div v-else class="flex flex-col items-center">
+      <CanvasArea :src="state.image.crop.base64" />
+      <ViewBoxConfig />
+    </div>
   </div>
 </template>

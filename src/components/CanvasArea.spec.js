@@ -1,16 +1,21 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect } from 'vitest'
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import CanvasArea from './CanvasArea.vue'
 
 describe('CanvasArea', () => {
   const src = 'data:image/png;base64,abc123'
 
-  function createWrapper(vw = 1000, vh = 800) {
+  function makeState(parameters = null) {
+    return reactive({ canvas: { parameters } })
+  }
+
+  function createWrapper(vw = 1000, vh = 800, state = makeState()) {
     return mount(CanvasArea, {
       props: { src },
       global: {
         provide: {
+          state,
           innerWidth:  ref(vw),
           innerHeight: ref(vh),
         },
@@ -85,12 +90,24 @@ describe('CanvasArea', () => {
     expect(svg.classes()).toContain('left-0')
   })
 
+  it('does not set a viewBox attribute when canvas.parameters is null', async () => {
+    const wrapper = createWrapper(1000, 800, makeState(null))
+    await loadImage(wrapper, 1000, 500)
+    expect(wrapper.find('svg').attributes('viewBox')).toBeUndefined()
+  })
+
+  it('applies the viewBox attribute derived from canvas.parameters', async () => {
+    const wrapper = createWrapper(1000, 800, makeState({ width: 1000, height: 500 }))
+    await loadImage(wrapper, 1000, 500)
+    expect(wrapper.find('svg').attributes('viewBox')).toBe('0 0 1000 500')
+  })
+
   it('recalculates dimensions reactively when innerWidth changes', async () => {
     const innerWidth  = ref(1000)
     const innerHeight = ref(800)
     const wrapper = mount(CanvasArea, {
       props: { src },
-      global: { provide: { innerWidth, innerHeight } },
+      global: { provide: { state: makeState(), innerWidth, innerHeight } },
     })
     // 1000x500 image at 1000x800 viewport → 800×400
     await loadImage(wrapper, 1000, 500)

@@ -3,6 +3,7 @@ import { ref, computed, inject } from 'vue'
 
 defineProps({ src: { type: String, required: true } })
 
+const state       = inject('state')
 const innerWidth  = inject('innerWidth')
 const innerHeight = inject('innerHeight')
 
@@ -28,6 +29,12 @@ const displaySize = computed(() => {
     height: Math.round(nh * scale),
   }
 })
+
+const viewBox = computed(() => {
+  const p = state.canvas.parameters
+  if (!p) return undefined
+  return `0 0 ${p.width} ${p.height}`
+})
 </script>
 
 <template>
@@ -46,6 +53,7 @@ const displaySize = computed(() => {
       class="absolute top-0 left-0 pointer-events-none"
       :width="displaySize.width"
       :height="displaySize.height"
+      :viewBox="viewBox"
     />
   </div>
 </template>

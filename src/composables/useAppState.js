@@ -18,5 +18,9 @@ export function useAppState() {
     state.image.rect = rect;
   }
 
-  return { state, setImageBase64, setCropResult }
+  function setCanvasParameters(width, height) {
+    state.canvas.parameters = { width, height }
+  }
+
+  return { state, setImageBase64, setCropResult, setCanvasParameters }
 }
