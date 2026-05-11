@@ -1,11 +1,13 @@
 import { reactive } from 'vue'
+import { useSvgData } from './useSvgData'
 
 export function useAppState() {
+  const { data: svgData, addPoint } = useSvgData()
   const state = reactive({
     image: { base64: null, crop: null, rect: null },
     canvas: {
       parameters: null,
-      svg: { points: [], controlPoints: [], paths: [] },
+      svg: svgData,
     },
   })
 
@@ -22,5 +24,5 @@ export function useAppState() {
     state.canvas.parameters = { width, height }
   }
 
-  return { state, setImageBase64, setCropResult, setCanvasParameters }
+  return { state, setImageBase64, setCropResult, setCanvasParameters, addPoint }
 }

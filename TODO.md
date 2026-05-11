@@ -75,7 +75,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 4 — Core data structure and utilities
 
 ### 9. SVG data structure and point deduplication
-- [ ] **SVG data structure and point deduplication**
+- [x] **SVG data structure and point deduplication**
 
   Define and export the reactive SVG data structure (`{ points, controlPoints, paths }`) as a composable (e.g. `useSvgData`). Implement the `addPoint(x, y)` utility that checks existing points within a hard-coded pixel tolerance and returns the index of the matching point or inserts a new one. Write unit tests covering deduplication (near-identical coordinates share an index) and insertion (distant coordinates create a new entry).
 

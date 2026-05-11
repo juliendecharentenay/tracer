@@ -8,13 +8,14 @@ import CropOverlay from '@/components/CropOverlay.vue'
 import CanvasArea from '@/components/CanvasArea.vue'
 import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
 
-const { state, setImageBase64, setCropResult, setCanvasParameters } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
 provide('setCropResult', setCropResult)
 provide('setCanvasParameters', setCanvasParameters)
+provide('addPoint', addPoint)
 provide('innerWidth', innerWidth)
 provide('innerHeight', innerHeight)
 
