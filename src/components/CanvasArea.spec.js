@@ -182,6 +182,41 @@ describe('CanvasArea', () => {
     })
   })
 
+  describe('live preview line', () => {
+    async function mountDrawing(isDrawing, triggerMousemove = true) {
+      const state = makeState({ width: 1000, height: 500 }, [[50, 75]])
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing: ref(isDrawing),
+        drawingStartIdx: ref(0),
+      })
+      await loadImage(wrapper, 1000, 500)
+      if (triggerMousemove) {
+        await wrapper.find('svg').trigger('mousemove')
+      }
+      return wrapper
+    }
+
+    it('does not render a preview path when not drawing', async () => {
+      const wrapper = await mountDrawing(false)
+      const paths = wrapper.find('svg').findAll('path')
+      expect(paths).toHaveLength(0)
+    })
+
+    it('does not render a preview path when drawing but cursor has left the canvas', async () => {
+      const wrapper = await mountDrawing(true)
+      await wrapper.find('svg').trigger('mouseleave')
+      const paths = wrapper.find('svg').findAll('path')
+      expect(paths).toHaveLength(0)
+    })
+
+    it('renders a preview path with correct d attribute when drawing and cursor is over canvas', async () => {
+      const wrapper = await mountDrawing(true)
+      const paths = wrapper.find('svg').findAll('path')
+      expect(paths).toHaveLength(1)
+      expect(paths[0].attributes('d')).toBe('M 50 75 L 100 200')
+    })
+  })
+
   describe('point symbol rendering', () => {
     it('renders a PointSymbol for each entry in state.canvas.svg.points', async () => {
       const state = makeState({ width: 1000, height: 500 }, [[100, 200], [300, 400]])

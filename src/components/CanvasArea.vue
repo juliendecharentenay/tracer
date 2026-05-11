@@ -9,6 +9,7 @@ const state           = inject('state')
 const innerWidth      = inject('innerWidth')
 const innerHeight     = inject('innerHeight')
 const addPoint        = inject('addPoint')
+const isDrawing       = inject('isDrawing')
 const beginDraw       = inject('beginDraw')
 const drawingStartIdx = inject('drawingStartIdx')
 
@@ -42,6 +43,12 @@ const viewBox = computed(() => {
   const p = state.canvas.parameters
   if (!p) return undefined
   return `0 0 ${p.width} ${p.height}`
+})
+
+const previewD = computed(() => {
+  if (!isDrawing.value || !cursor.value) return null
+  const [x1, y1] = state.canvas.svg.points[drawingStartIdx.value]
+  return `M ${x1} ${y1} L ${cursor.value.x} ${cursor.value.y}`
 })
 
 function onMouseMove(evt) {
@@ -81,6 +88,14 @@ function onBackgroundClick(evt) {
       @mouseleave="onMouseLeave"
       @click.self="onBackgroundClick"
     >
+      <path
+        v-if="previewD"
+        :d="previewD"
+        fill="none"
+        stroke="currentColor"
+        stroke-dasharray="4 4"
+        pointer-events="none"
+      />
       <PointSymbol
         v-for="([px, py], i) in state.canvas.svg.points"
         :key="i"

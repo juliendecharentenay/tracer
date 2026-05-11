@@ -100,7 +100,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** clicking the canvas background in tracing mode places a visible point symbol and the app waits for the end point.
 
 ### 12. Draw a straight line — live preview
-- [ ] **Draw a straight line — live preview**
+- [x] **Draw a straight line — live preview**
 
   While the user is in "drawing in progress" state (start point placed), render a live preview line from the start point to the current mouse cursor position. The preview line updates on every `mousemove` event. The preview is not part of the committed data structure and disappears if the operation is aborted.
 
