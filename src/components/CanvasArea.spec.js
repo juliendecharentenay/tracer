@@ -1,16 +1,27 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref, reactive } from 'vue'
 import CanvasArea from './CanvasArea.vue'
+import PointSymbol from './PointSymbol.vue'
+
+vi.mock('@/composables/useCoordinateMapper', () => ({
+  useCoordinateMapper: () => ({
+    mapMouseEvent: vi.fn().mockReturnValue({ x: 100, y: 200 }),
+  }),
+}))
 
 describe('CanvasArea', () => {
   const src = 'data:image/png;base64,abc123'
 
-  function makeState(parameters = null) {
-    return reactive({ canvas: { parameters } })
+  function makeSvgData(points = []) {
+    return { points, controlPoints: [], paths: [] }
   }
 
-  function createWrapper(vw = 1000, vh = 800, state = makeState()) {
+  function makeState(parameters = null, svgPoints = []) {
+    return reactive({ canvas: { parameters, svg: makeSvgData(svgPoints) } })
+  }
+
+  function createWrapper(vw = 1000, vh = 800, state = makeState(), extra = {}) {
     return mount(CanvasArea, {
       props: { src },
       global: {
@@ -18,6 +29,12 @@ describe('CanvasArea', () => {
           state,
           innerWidth:  ref(vw),
           innerHeight: ref(vh),
+          addPoint:      vi.fn().mockReturnValue(0),
+          isDrawing:     ref(false),
+          beginDraw:     vi.fn(),
+          cancelDraw:    vi.fn(),
+          drawingStartIdx: ref(null),
+          ...extra,
         },
       },
     })
@@ -107,7 +124,18 @@ describe('CanvasArea', () => {
     const innerHeight = ref(800)
     const wrapper = mount(CanvasArea, {
       props: { src },
-      global: { provide: { state: makeState(), innerWidth, innerHeight } },
+      global: {
+        provide: {
+          state: makeState(),
+          innerWidth,
+          innerHeight,
+          addPoint: vi.fn().mockReturnValue(0),
+          isDrawing: ref(false),
+          beginDraw: vi.fn(),
+          cancelDraw: vi.fn(),
+          drawingStartIdx: ref(null),
+        },
+      },
     })
     // 1000x500 image at 1000x800 viewport → 800×400
     await loadImage(wrapper, 1000, 500)
@@ -119,5 +147,65 @@ describe('CanvasArea', () => {
     const style = wrapper.find('img').attributes('style')
     expect(style).toContain('width: 480px')
     expect(style).toContain('height: 240px')
+  })
+
+  describe('background click in tracing mode', () => {
+    async function mountAndLoad(extra = {}) {
+      const state = makeState({ width: 1000, height: 500 })
+      const wrapper = createWrapper(1000, 800, state, extra)
+      await loadImage(wrapper, 1000, 500)
+      return { wrapper, state }
+    }
+
+    it('calls addPoint with mapped coordinates when clicking the SVG background', async () => {
+      const addPoint = vi.fn().mockReturnValue(0)
+      const { wrapper } = await mountAndLoad({ addPoint })
+      await wrapper.find('svg').trigger('click')
+      expect(addPoint).toHaveBeenCalledWith(100, 200)
+    })
+
+    it('calls beginDraw with the index returned by addPoint', async () => {
+      const addPoint = vi.fn().mockReturnValue(5)
+      const beginDraw = vi.fn()
+      const { wrapper } = await mountAndLoad({ addPoint, beginDraw })
+      await wrapper.find('svg').trigger('click')
+      expect(beginDraw).toHaveBeenCalledWith(5)
+    })
+
+    it('does not call addPoint when canvas.parameters is null', async () => {
+      const addPoint = vi.fn().mockReturnValue(0)
+      const state = makeState(null)
+      const wrapper = createWrapper(1000, 800, state, { addPoint })
+      await loadImage(wrapper, 1000, 500)
+      await wrapper.find('svg').trigger('click')
+      expect(addPoint).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('point symbol rendering', () => {
+    it('renders a PointSymbol for each entry in state.canvas.svg.points', async () => {
+      const state = makeState({ width: 1000, height: 500 }, [[100, 200], [300, 400]])
+      const wrapper = createWrapper(1000, 800, state)
+      await loadImage(wrapper, 1000, 500)
+      expect(wrapper.findAllComponents(PointSymbol)).toHaveLength(2)
+    })
+
+    it('passes the correct x and y props to each PointSymbol', async () => {
+      const state = makeState({ width: 1000, height: 500 }, [[100, 200]])
+      const wrapper = createWrapper(1000, 800, state)
+      await loadImage(wrapper, 1000, 500)
+      const sym = wrapper.findComponent(PointSymbol)
+      expect(sym.props('x')).toBe(100)
+      expect(sym.props('y')).toBe(200)
+    })
+
+    it('marks the drawingStartIdx point as active', async () => {
+      const state = makeState({ width: 1000, height: 500 }, [[100, 200], [300, 400]])
+      const wrapper = createWrapper(1000, 800, state, { drawingStartIdx: ref(1) })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      expect(symbols[0].props('status')).toBe('default')
+      expect(symbols[1].props('status')).toBe('active')
+    })
   })
 })

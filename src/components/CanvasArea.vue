@@ -1,12 +1,16 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import { useCoordinateMapper } from '@/composables/useCoordinateMapper'
+import PointSymbol from './PointSymbol.vue'
 
 defineProps({ src: { type: String, required: true } })
 
-const state       = inject('state')
-const innerWidth  = inject('innerWidth')
-const innerHeight = inject('innerHeight')
+const state           = inject('state')
+const innerWidth      = inject('innerWidth')
+const innerHeight     = inject('innerHeight')
+const addPoint        = inject('addPoint')
+const beginDraw       = inject('beginDraw')
+const drawingStartIdx = inject('drawingStartIdx')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
@@ -47,6 +51,13 @@ function onMouseMove(evt) {
 function onMouseLeave() {
   cursor.value = null
 }
+
+function onBackgroundClick(evt) {
+  if (!state.canvas.parameters) return
+  const { x, y } = mapMouseEvent(evt)
+  const idx = addPoint(x, y)
+  beginDraw(idx)
+}
 </script>
 
 <template>
@@ -68,7 +79,17 @@ function onMouseLeave() {
       :viewBox="viewBox"
       @mousemove="onMouseMove"
       @mouseleave="onMouseLeave"
-    />
+      @click.self="onBackgroundClick"
+    >
+      <PointSymbol
+        v-for="([px, py], i) in state.canvas.svg.points"
+        :key="i"
+        :x="px"
+        :y="py"
+        type="start/end"
+        :status="i === drawingStartIdx ? 'active' : 'default'"
+      />
+    </svg>
     <div
       v-if="cursor"
       class="absolute bottom-1 right-1 bg-black/60 text-white text-xs font-mono px-2 py-1 rounded pointer-events-none select-none"

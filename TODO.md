@@ -93,7 +93,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 5 — Tracing
 
 ### 11. Draw a straight line — start point
-- [ ] **Draw a straight line — start point**
+- [x] **Draw a straight line — start point**
 
   In tracing mode, a single click on the SVG canvas background places the start point of a new line. The point is added to the `points` array (with deduplication). A filled-square point symbol (`<rect>`) is rendered at that location. The application enters "drawing in progress" state, ready to receive an end point.
 

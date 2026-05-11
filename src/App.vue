@@ -2,6 +2,7 @@
 import { provide, ref, onMounted, onUnmounted } from 'vue'
 import { useAppState } from '@/composables/useAppState'
 import { useWindowSize } from '@/composables/useWindowSize'
+import { useTracingState } from '@/composables/useTracingState'
 import { cropImage } from '@/utils/cropImage'
 import ImportButton from '@/components/ImportButton.vue'
 import CropOverlay from '@/components/CropOverlay.vue'
@@ -10,6 +11,7 @@ import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
 
 const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
+const { drawingStartIdx, isDrawing, beginDraw, cancelDraw } = useTracingState()
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
@@ -18,6 +20,10 @@ provide('setCanvasParameters', setCanvasParameters)
 provide('addPoint', addPoint)
 provide('innerWidth', innerWidth)
 provide('innerHeight', innerHeight)
+provide('drawingStartIdx', drawingStartIdx)
+provide('isDrawing', isDrawing)
+provide('beginDraw', beginDraw)
+provide('cancelDraw', cancelDraw)
 
 onMounted(() => window.addEventListener('resize', onResize))
 onUnmounted(() => window.removeEventListener('resize', onResize))
