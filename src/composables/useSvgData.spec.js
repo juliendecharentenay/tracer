@@ -55,6 +55,26 @@ describe('useSvgData', () => {
     expect(data.points).toHaveLength(2)
   })
 
+  describe('addPath', () => {
+    it('pushes a line path object into data.paths', () => {
+      const { data, addPoint, addPath } = useSvgData()
+      addPoint(0, 0)
+      addPoint(100, 100)
+      addPath('line', 0, 1)
+      expect(data.paths).toEqual([{ type: 'line', points: [0, 1], controlPoints: [] }])
+    })
+
+    it('increments data.paths length with each call', () => {
+      const { data, addPoint, addPath } = useSvgData()
+      addPoint(0, 0)
+      addPoint(100, 100)
+      addPoint(200, 200)
+      addPath('line', 0, 1)
+      addPath('line', 1, 2)
+      expect(data.paths).toHaveLength(2)
+    })
+  })
+
   it('each call to useSvgData produces independent state', () => {
     const a = useSvgData()
     const b = useSvgData()

@@ -107,7 +107,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** moving the mouse after placing a start point shows a line that follows the cursor in real time.
 
 ### 13. Draw a straight line — end point and commit
-- [ ] **Draw a straight line — end point and commit**
+- [x] **Draw a straight line — end point and commit**
 
   A single click in "drawing in progress" state places the end point and commits the line. Clicking the canvas background adds a new point (with deduplication); clicking an existing point symbol reuses that point's index; clicking an existing path element adds a new point at the click location on the path. The committed path (`type: "line"`, `points: [startIdx, endIdx]`, `controlPoints: []`) is pushed into the `paths` array. The preview line is removed and the app returns to idle state.
 

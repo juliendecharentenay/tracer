@@ -16,5 +16,9 @@ export function useSvgData() {
     return data.points.length - 1
   }
 
-  return { data, addPoint }
+  function addPath(type, startIdx, endIdx) {
+    data.paths.push({ type, points: [startIdx, endIdx], controlPoints: [] })
+  }
+
+  return { data, addPoint, addPath }
 }

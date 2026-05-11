@@ -9,7 +9,7 @@ import CropOverlay from '@/components/CropOverlay.vue'
 import CanvasArea from '@/components/CanvasArea.vue'
 import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
 
-const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 const { drawingStartIdx, isDrawing, beginDraw, cancelDraw } = useTracingState()
 
@@ -24,6 +24,10 @@ provide('drawingStartIdx', drawingStartIdx)
 provide('isDrawing', isDrawing)
 provide('beginDraw', beginDraw)
 provide('cancelDraw', cancelDraw)
+provide('commitLine', (startIdx, endIdx) => {
+  addPath('line', startIdx, endIdx)
+  cancelDraw()
+})
 
 onMounted(() => window.addEventListener('resize', onResize))
 onUnmounted(() => window.removeEventListener('resize', onResize))

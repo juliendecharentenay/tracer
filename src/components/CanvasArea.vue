@@ -11,6 +11,7 @@ const innerHeight     = inject('innerHeight')
 const addPoint        = inject('addPoint')
 const isDrawing       = inject('isDrawing')
 const beginDraw       = inject('beginDraw')
+const commitLine      = inject('commitLine')
 const drawingStartIdx = inject('drawingStartIdx')
 
 const imgRef = ref(null)
@@ -59,11 +60,36 @@ function onMouseLeave() {
   cursor.value = null
 }
 
+function pathD(path) {
+  const [x1, y1] = state.canvas.svg.points[path.points[0]]
+  const [x2, y2] = state.canvas.svg.points[path.points[1]]
+  return `M ${x1} ${y1} L ${x2} ${y2}`
+}
+
+function onPointClick(idx) {
+  if (isDrawing.value) {
+    commitLine(drawingStartIdx.value, idx)
+  } else {
+    beginDraw(idx)
+  }
+}
+
+function onPathClick(evt) {
+  if (!isDrawing.value) return
+  const { x, y } = mapMouseEvent(evt)
+  const idx = addPoint(x, y)
+  commitLine(drawingStartIdx.value, idx)
+}
+
 function onBackgroundClick(evt) {
   if (!state.canvas.parameters) return
   const { x, y } = mapMouseEvent(evt)
   const idx = addPoint(x, y)
-  beginDraw(idx)
+  if (isDrawing.value) {
+    commitLine(drawingStartIdx.value, idx)
+  } else {
+    beginDraw(idx)
+  }
 }
 </script>
 
@@ -89,6 +115,14 @@ function onBackgroundClick(evt) {
       @click.self="onBackgroundClick"
     >
       <path
+        v-for="(p, i) in state.canvas.svg.paths"
+        :key="i"
+        :d="pathD(p)"
+        fill="none"
+        stroke="currentColor"
+        @click="onPathClick"
+      />
+      <path
         v-if="previewD"
         :d="previewD"
         fill="none"
@@ -103,6 +137,7 @@ function onBackgroundClick(evt) {
         :y="py"
         type="start/end"
         :status="i === drawingStartIdx ? 'active' : 'default'"
+        @click.stop="onPointClick(i)"
       />
     </svg>
     <div
