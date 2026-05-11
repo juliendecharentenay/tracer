@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
+import { useCoordinateMapper } from '@/composables/useCoordinateMapper'
 
 defineProps({ src: { type: String, required: true } })
 
@@ -9,6 +10,9 @@ const innerHeight = inject('innerHeight')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
+const cursor = ref(null)
+
+const { mapMouseEvent } = useCoordinateMapper()
 
 function onLoad() {
   naturalSize.value = {
@@ -35,6 +39,14 @@ const viewBox = computed(() => {
   if (!p) return undefined
   return `0 0 ${p.width} ${p.height}`
 })
+
+function onMouseMove(evt) {
+  cursor.value = mapMouseEvent(evt)
+}
+
+function onMouseLeave() {
+  cursor.value = null
+}
 </script>
 
 <template>
@@ -50,10 +62,18 @@ const viewBox = computed(() => {
     <svg
       v-if="displaySize"
       id="canvas"
-      class="absolute top-0 left-0 pointer-events-none"
+      class="absolute top-0 left-0"
       :width="displaySize.width"
       :height="displaySize.height"
       :viewBox="viewBox"
+      @mousemove="onMouseMove"
+      @mouseleave="onMouseLeave"
     />
+    <div
+      v-if="cursor"
+      class="absolute bottom-1 right-1 bg-black/60 text-white text-xs font-mono px-2 py-1 rounded pointer-events-none select-none"
+    >
+      {{ cursor.x }}, {{ cursor.y }}
+    </div>
   </div>
 </template>

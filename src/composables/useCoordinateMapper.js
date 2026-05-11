@@ -1,12 +1,10 @@
 export function useCoordinateMapper() {
-  let svg = null
-  let pt = null
+  const ptCache = new WeakMap()
 
   function mapMouseEvent(evt) {
-    if (!svg) {
-      svg = document.getElementById('canvas')
-      pt = svg.createSVGPoint()
-    }
+    const svg = evt.currentTarget
+    if (!ptCache.has(svg)) ptCache.set(svg, svg.createSVGPoint())
+    const pt = ptCache.get(svg)
     pt.x = evt.clientX
     pt.y = evt.clientY
     const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse())
