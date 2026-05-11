@@ -82,7 +82,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** unit tests confirm that two points within tolerance share an index, and that two points beyond tolerance each get their own index.
 
 ### 10. Coordinate mapping
-- [ ] **Coordinate mapping**
+- [x] **Coordinate mapping**
 
   Implement the `useCoordinateMapper` composable that lazily acquires the SVG element and a reusable `SVGPoint`, then maps a `MouseEvent` (`clientX`, `clientY`) to rounded integer SVG viewBox coordinates via `matrixTransform(getScreenCTM().inverse())`. Write unit tests using a mocked SVG element. Expose the mapper for use by both the tracing and display panels.
 
