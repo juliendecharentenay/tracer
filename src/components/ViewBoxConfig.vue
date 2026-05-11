@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, inject, onMounted } from 'vue'
+import { ref, computed, inject } from 'vue'
 
 const state = inject('state')
 const setCanvasParameters = inject('setCanvasParameters')
@@ -16,9 +16,6 @@ const viewBoxHeight = computed(() =>
 function sync() {
   setCanvasParameters(viewBoxWidth.value, viewBoxHeight.value)
 }
-
-onMounted(sync)
-watch([viewBoxWidth, viewBoxHeight], sync)
 </script>
 
 <template>
@@ -33,5 +30,11 @@ watch([viewBoxWidth, viewBoxHeight], sync)
       />
     </label>
     <span class="text-sm text-gray-600">Height: {{ viewBoxHeight }}</span>
+    <button
+      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded shadow text-sm"
+      @click="sync"
+    >
+      Approve
+    </button>
   </div>
 </template>

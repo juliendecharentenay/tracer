@@ -68,7 +68,7 @@ async function onCrop() {
 
     <div v-else class="flex flex-col items-center">
       <CanvasArea :src="state.image.crop.base64" />
-      <ViewBoxConfig />
+      <ViewBoxConfig v-if="!state.canvas.parameters" />
     </div>
   </div>
 </template>

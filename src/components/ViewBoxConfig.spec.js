@@ -27,12 +27,6 @@ describe('ViewBoxConfig', () => {
     expect(createWrapper(makeState(1600, 900)).text()).toContain('563')
   })
 
-  it('calls setCanvasParameters with default values on mount', () => {
-    const setCanvasParameters = vi.fn()
-    createWrapper(makeState(1600, 900), setCanvasParameters)
-    expect(setCanvasParameters).toHaveBeenCalledWith(1000, 563)
-  })
-
   it('recomputes height when width changes', async () => {
     const wrapper = createWrapper(makeState(1000, 500))
     await wrapper.find('input[type="number"]').setValue('2000')
@@ -40,15 +34,33 @@ describe('ViewBoxConfig', () => {
     expect(wrapper.text()).toContain('1000')
   })
 
-  it('calls setCanvasParameters when width changes', async () => {
-    const setCanvasParameters = vi.fn()
-    const wrapper = createWrapper(makeState(1000, 500), setCanvasParameters)
-    await wrapper.find('input[type="number"]').setValue('2000')
-    expect(setCanvasParameters).toHaveBeenLastCalledWith(2000, 1000)
-  })
-
   it('displays a height label so the user can read the derived value', () => {
     // 800×600 image, width=1000 → height = round(1000 * 600 / 800) = 750
     expect(createWrapper(makeState(800, 600)).text()).toContain('750')
+  })
+
+  it('renders an Approve button', () => {
+    expect(createWrapper().find('button').exists()).toBe(true)
+    expect(createWrapper().find('button').text()).toBe('Approve')
+  })
+
+  it('clicking Approve calls setCanvasParameters with the current width and derived height', async () => {
+    const setCanvasParameters = vi.fn()
+    const wrapper = createWrapper(makeState(1600, 900), setCanvasParameters)
+    await wrapper.find('button').trigger('click')
+    expect(setCanvasParameters).toHaveBeenCalledWith(1000, 563)
+  })
+
+  it('setCanvasParameters is not called on mount', () => {
+    const setCanvasParameters = vi.fn()
+    createWrapper(makeState(1600, 900), setCanvasParameters)
+    expect(setCanvasParameters).not.toHaveBeenCalled()
+  })
+
+  it('setCanvasParameters is not called when width changes without clicking Approve', async () => {
+    const setCanvasParameters = vi.fn()
+    const wrapper = createWrapper(makeState(1000, 500), setCanvasParameters)
+    await wrapper.find('input[type="number"]').setValue('2000')
+    expect(setCanvasParameters).not.toHaveBeenCalled()
   })
 })

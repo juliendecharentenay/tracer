@@ -64,7 +64,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** changing the viewBox width immediately updates the stored height to maintain the image aspect ratio; the displayed coordinates reflect the new viewBox scale.
 
 ### 8. Approve canvas configuration
-- [ ] **Approve canvas configuration**
+- [x] **Approve canvas configuration**
 
   Add a button to confirm the viewBox configuration and proceed to the tracing phase. Clicking it locks in the viewBox values and switches the application to tracing mode. The background image and SVG canvas remain visible; no further viewBox editing is available.
 
