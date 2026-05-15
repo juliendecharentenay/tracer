@@ -1,5 +1,5 @@
 <script setup>
-import { provide, ref, onMounted, onUnmounted } from 'vue'
+import { provide, onMounted, onUnmounted, ref } from 'vue'
 import { useAppState } from '@/composables/useAppState'
 import { useWindowSize } from '@/composables/useWindowSize'
 import { useTracingState } from '@/composables/useTracingState'
@@ -11,26 +11,38 @@ import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
 
 const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
-const { drawingStartIdx, isDrawing, beginDraw, cancelDraw } = useTracingState()
+const { drawingStartCoords, isDrawing, beginDraw, cancelDraw } = useTracingState()
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
 provide('setCropResult', setCropResult)
 provide('setCanvasParameters', setCanvasParameters)
-provide('addPoint', addPoint)
 provide('innerWidth', innerWidth)
 provide('innerHeight', innerHeight)
-provide('drawingStartIdx', drawingStartIdx)
+provide('drawingStartCoords', drawingStartCoords)
 provide('isDrawing', isDrawing)
 provide('beginDraw', beginDraw)
 provide('cancelDraw', cancelDraw)
-provide('commitLine', (startIdx, endIdx) => {
+provide('commitLine', (endX, endY) => {
+  const [startX, startY] = drawingStartCoords.value
+  const startIdx = addPoint(startX, startY)
+  const endIdx   = addPoint(endX, endY)
   addPath('line', startIdx, endIdx)
   cancelDraw()
 })
 
-onMounted(() => window.addEventListener('resize', onResize))
-onUnmounted(() => window.removeEventListener('resize', onResize))
+function onKeyDown(evt) {
+  if (evt.key === 'Escape') cancelDraw()
+}
+
+onMounted(() => {
+  window.addEventListener('resize', onResize)
+  window.addEventListener('keydown', onKeyDown)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
+  window.removeEventListener('keydown', onKeyDown)
+})
 
 const imageRef = ref(null)
 const imageDimensions = ref(null)

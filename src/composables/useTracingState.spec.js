@@ -7,34 +7,34 @@ describe('useTracingState', () => {
     expect(isDrawing.value).toBe(false)
   })
 
-  it('drawingStartIdx is null initially', () => {
-    const { drawingStartIdx } = useTracingState()
-    expect(drawingStartIdx.value).toBeNull()
+  it('drawingStartCoords is null initially', () => {
+    const { drawingStartCoords } = useTracingState()
+    expect(drawingStartCoords.value).toBeNull()
   })
 
   it('beginDraw sets isDrawing to true', () => {
     const { isDrawing, beginDraw } = useTracingState()
-    beginDraw(3)
+    beginDraw(10, 20)
     expect(isDrawing.value).toBe(true)
   })
 
-  it('beginDraw stores the given point index', () => {
-    const { drawingStartIdx, beginDraw } = useTracingState()
-    beginDraw(3)
-    expect(drawingStartIdx.value).toBe(3)
+  it('beginDraw stores the given coordinates', () => {
+    const { drawingStartCoords, beginDraw } = useTracingState()
+    beginDraw(10, 20)
+    expect(drawingStartCoords.value).toEqual([10, 20])
   })
 
   it('cancelDraw resets isDrawing to false', () => {
     const { isDrawing, beginDraw, cancelDraw } = useTracingState()
-    beginDraw(3)
+    beginDraw(10, 20)
     cancelDraw()
     expect(isDrawing.value).toBe(false)
   })
 
-  it('cancelDraw resets drawingStartIdx to null', () => {
-    const { drawingStartIdx, beginDraw, cancelDraw } = useTracingState()
-    beginDraw(3)
+  it('cancelDraw resets drawingStartCoords to null', () => {
+    const { drawingStartCoords, beginDraw, cancelDraw } = useTracingState()
+    beginDraw(10, 20)
     cancelDraw()
-    expect(drawingStartIdx.value).toBeNull()
+    expect(drawingStartCoords.value).toBeNull()
   })
 })

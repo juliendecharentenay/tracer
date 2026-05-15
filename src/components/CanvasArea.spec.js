@@ -27,14 +27,13 @@ describe('CanvasArea', () => {
       global: {
         provide: {
           state,
-          innerWidth:  ref(vw),
-          innerHeight: ref(vh),
-          addPoint:      vi.fn().mockReturnValue(0),
-          isDrawing:     ref(false),
-          beginDraw:     vi.fn(),
-          cancelDraw:    vi.fn(),
-          commitLine:    vi.fn(),
-          drawingStartIdx: ref(null),
+          innerWidth:          ref(vw),
+          innerHeight:         ref(vh),
+          isDrawing:           ref(false),
+          beginDraw:           vi.fn(),
+          cancelDraw:          vi.fn(),
+          commitLine:          vi.fn(),
+          drawingStartCoords:  ref(null),
           ...extra,
         },
       },
@@ -130,11 +129,11 @@ describe('CanvasArea', () => {
           state: makeState(),
           innerWidth,
           innerHeight,
-          addPoint: vi.fn().mockReturnValue(0),
-          isDrawing: ref(false),
-          beginDraw: vi.fn(),
-          cancelDraw: vi.fn(),
-          drawingStartIdx: ref(null),
+          isDrawing:          ref(false),
+          beginDraw:          vi.fn(),
+          cancelDraw:         vi.fn(),
+          commitLine:         vi.fn(),
+          drawingStartCoords: ref(null),
         },
       },
     })
@@ -158,37 +157,28 @@ describe('CanvasArea', () => {
       return { wrapper, state }
     }
 
-    it('calls addPoint with mapped coordinates when clicking the SVG background', async () => {
-      const addPoint = vi.fn().mockReturnValue(0)
-      const { wrapper } = await mountAndLoad({ addPoint })
-      await wrapper.find('svg').trigger('click')
-      expect(addPoint).toHaveBeenCalledWith(100, 200)
-    })
-
-    it('calls beginDraw with the index returned by addPoint', async () => {
-      const addPoint = vi.fn().mockReturnValue(5)
+    it('calls beginDraw with mapped coordinates when clicking the SVG background (not drawing)', async () => {
       const beginDraw = vi.fn()
-      const { wrapper } = await mountAndLoad({ addPoint, beginDraw })
+      const { wrapper } = await mountAndLoad({ beginDraw })
       await wrapper.find('svg').trigger('click')
-      expect(beginDraw).toHaveBeenCalledWith(5)
+      expect(beginDraw).toHaveBeenCalledWith(100, 200)
     })
 
-    it('does not call addPoint when canvas.parameters is null', async () => {
-      const addPoint = vi.fn().mockReturnValue(0)
+    it('does not call beginDraw when canvas.parameters is null', async () => {
+      const beginDraw = vi.fn()
       const state = makeState(null)
-      const wrapper = createWrapper(1000, 800, state, { addPoint })
+      const wrapper = createWrapper(1000, 800, state, { beginDraw })
       await loadImage(wrapper, 1000, 500)
       await wrapper.find('svg').trigger('click')
-      expect(addPoint).not.toHaveBeenCalled()
+      expect(beginDraw).not.toHaveBeenCalled()
     })
   })
 
   describe('live preview line', () => {
     async function mountDrawing(isDrawing, triggerMousemove = true) {
-      const state = makeState({ width: 1000, height: 500 }, [[50, 75]])
-      const wrapper = createWrapper(1000, 800, state, {
-        isDrawing: ref(isDrawing),
-        drawingStartIdx: ref(0),
+      const wrapper = createWrapper(1000, 800, makeState({ width: 1000, height: 500 }), {
+        isDrawing:          ref(isDrawing),
+        drawingStartCoords: ref([50, 75]),
       })
       await loadImage(wrapper, 1000, 500)
       if (triggerMousemove) {
@@ -222,27 +212,19 @@ describe('CanvasArea', () => {
     async function mountDrawing(extra = {}) {
       const state = makeState({ width: 1000, height: 500 })
       const wrapper = createWrapper(1000, 800, state, {
-        isDrawing:      ref(true),
-        drawingStartIdx: ref(0),
+        isDrawing:          ref(true),
+        drawingStartCoords: ref([10, 20]),
         ...extra,
       })
       await loadImage(wrapper, 1000, 500)
       return wrapper
     }
 
-    it('calls addPoint with mapped coords when clicking background while drawing', async () => {
-      const addPoint = vi.fn().mockReturnValue(1)
-      const wrapper = await mountDrawing({ addPoint })
-      await wrapper.find('svg').trigger('click')
-      expect(addPoint).toHaveBeenCalledWith(100, 200)
-    })
-
-    it('calls commitLine with (startIdx, endIdx) when clicking background while drawing', async () => {
-      const addPoint = vi.fn().mockReturnValue(3)
+    it('calls commitLine with mapped end coords when clicking background while drawing', async () => {
       const commitLine = vi.fn()
-      const wrapper = await mountDrawing({ addPoint, commitLine })
+      const wrapper = await mountDrawing({ commitLine })
       await wrapper.find('svg').trigger('click')
-      expect(commitLine).toHaveBeenCalledWith(0, 3)
+      expect(commitLine).toHaveBeenCalledWith(100, 200)
     })
 
     it('does not call beginDraw when clicking background while drawing', async () => {
@@ -269,31 +251,21 @@ describe('CanvasArea', () => {
   })
 
   describe('point symbol click', () => {
-    async function mountWithPoints(isDrawingVal, points = [[50, 75], [200, 300]]) {
-      const state = makeState({ width: 1000, height: 500 }, points)
-      return createWrapper(1000, 800, state, {
-        isDrawing:      ref(isDrawingVal),
-        drawingStartIdx: ref(0),
-      })
-    }
-
-    it('calls commitLine with (startIdx, symbolIdx) when clicking a symbol while drawing', async () => {
+    it('calls commitLine with the symbol point coords when clicking a symbol while drawing', async () => {
       const commitLine = vi.fn()
-      const wrapper = await mountWithPoints(true)
-      // override provide after mount isn't possible; remount with override
       const state = makeState({ width: 1000, height: 500 }, [[50, 75], [200, 300]])
       const w = createWrapper(1000, 800, state, {
-        isDrawing:      ref(true),
-        drawingStartIdx: ref(0),
+        isDrawing:          ref(true),
+        drawingStartCoords: ref([10, 20]),
         commitLine,
       })
       await loadImage(w, 1000, 500)
       const symbols = w.findAllComponents(PointSymbol)
       await symbols[1].trigger('click')
-      expect(commitLine).toHaveBeenCalledWith(0, 1)
+      expect(commitLine).toHaveBeenCalledWith(200, 300)
     })
 
-    it('calls beginDraw with symbolIdx when clicking a symbol while NOT drawing', async () => {
+    it('calls beginDraw with symbol coords when clicking a symbol while NOT drawing', async () => {
       const beginDraw = vi.fn()
       const state = makeState({ width: 1000, height: 500 }, [[50, 75]])
       const w = createWrapper(1000, 800, state, {
@@ -303,7 +275,7 @@ describe('CanvasArea', () => {
       await loadImage(w, 1000, 500)
       const sym = w.findComponent(PointSymbol)
       await sym.trigger('click')
-      expect(beginDraw).toHaveBeenCalledWith(0)
+      expect(beginDraw).toHaveBeenCalledWith(50, 75)
     })
   })
 
@@ -332,6 +304,7 @@ describe('CanvasArea', () => {
       const state = makeState({ width: 1000, height: 500 }, [[100, 200], [300, 400]])
       const wrapper = createWrapper(1000, 800, state)
       await loadImage(wrapper, 1000, 500)
+      // 2 committed points + no pending start (not drawing)
       expect(wrapper.findAllComponents(PointSymbol)).toHaveLength(2)
     })
 
@@ -344,13 +317,39 @@ describe('CanvasArea', () => {
       expect(sym.props('y')).toBe(200)
     })
 
-    it('marks the drawingStartIdx point as active', async () => {
+    it('renders committed point symbols with default status', async () => {
       const state = makeState({ width: 1000, height: 500 }, [[100, 200], [300, 400]])
-      const wrapper = createWrapper(1000, 800, state, { drawingStartIdx: ref(1) })
+      const wrapper = createWrapper(1000, 800, state)
       await loadImage(wrapper, 1000, 500)
       const symbols = wrapper.findAllComponents(PointSymbol)
       expect(symbols[0].props('status')).toBe('default')
-      expect(symbols[1].props('status')).toBe('active')
+      expect(symbols[1].props('status')).toBe('default')
+    })
+  })
+
+  describe('pending start point symbol', () => {
+    it('renders an extra active PointSymbol at drawingStartCoords when drawing', async () => {
+      const state = makeState({ width: 1000, height: 500 }, [])
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(true),
+        drawingStartCoords: ref([42, 99]),
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      expect(symbols).toHaveLength(1)
+      expect(symbols[0].props('x')).toBe(42)
+      expect(symbols[0].props('y')).toBe(99)
+      expect(symbols[0].props('status')).toBe('active')
+    })
+
+    it('does not render the pending start symbol when not drawing', async () => {
+      const state = makeState({ width: 1000, height: 500 }, [])
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        drawingStartCoords: ref(null),
+      })
+      await loadImage(wrapper, 1000, 500)
+      expect(wrapper.findAllComponents(PointSymbol)).toHaveLength(0)
     })
   })
 })

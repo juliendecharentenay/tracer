@@ -114,7 +114,7 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
   **Success criteria:** after two clicks a `<path d="M x1 y1 L x2 y2">` element appears in the SVG and the point symbols are visible at both endpoints.
 
 ### 14. Abort drawing with Escape
-- [ ] **Abort drawing with Escape**
+- [x] **Abort drawing with Escape**
 
   When the user is in "drawing in progress" state, pressing the **Escape** key discards the in-progress line, removes any speculatively added start point from `points` (if it was newly created and not shared), and returns the app to idle state. The preview line and any uncommitted point symbol disappear.
 

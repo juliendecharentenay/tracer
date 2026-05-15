@@ -5,14 +5,14 @@ import PointSymbol from './PointSymbol.vue'
 
 defineProps({ src: { type: String, required: true } })
 
-const state           = inject('state')
-const innerWidth      = inject('innerWidth')
-const innerHeight     = inject('innerHeight')
-const addPoint        = inject('addPoint')
-const isDrawing       = inject('isDrawing')
-const beginDraw       = inject('beginDraw')
-const commitLine      = inject('commitLine')
-const drawingStartIdx = inject('drawingStartIdx')
+const state              = inject('state')
+const innerWidth         = inject('innerWidth')
+const innerHeight        = inject('innerHeight')
+const isDrawing          = inject('isDrawing')
+const beginDraw          = inject('beginDraw')
+const cancelDraw         = inject('cancelDraw')
+const commitLine         = inject('commitLine')
+const drawingStartCoords = inject('drawingStartCoords')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
@@ -47,8 +47,8 @@ const viewBox = computed(() => {
 })
 
 const previewD = computed(() => {
-  if (!isDrawing.value || !cursor.value) return null
-  const [x1, y1] = state.canvas.svg.points[drawingStartIdx.value]
+  if (!isDrawing.value || !cursor.value || !drawingStartCoords.value) return null
+  const [x1, y1] = drawingStartCoords.value
   return `M ${x1} ${y1} L ${cursor.value.x} ${cursor.value.y}`
 })
 
@@ -67,28 +67,27 @@ function pathD(path) {
 }
 
 function onPointClick(idx) {
+  const [px, py] = state.canvas.svg.points[idx]
   if (isDrawing.value) {
-    commitLine(drawingStartIdx.value, idx)
+    commitLine(px, py)
   } else {
-    beginDraw(idx)
+    beginDraw(px, py)
   }
 }
 
 function onPathClick(evt) {
   if (!isDrawing.value) return
   const { x, y } = mapMouseEvent(evt)
-  const idx = addPoint(x, y)
-  commitLine(drawingStartIdx.value, idx)
+  commitLine(x, y)
 }
 
 function onBackgroundClick(evt) {
   if (!state.canvas.parameters) return
   const { x, y } = mapMouseEvent(evt)
-  const idx = addPoint(x, y)
   if (isDrawing.value) {
-    commitLine(drawingStartIdx.value, idx)
+    commitLine(x, y)
   } else {
-    beginDraw(idx)
+    beginDraw(x, y)
   }
 }
 </script>
@@ -136,8 +135,16 @@ function onBackgroundClick(evt) {
         :x="px"
         :y="py"
         type="start/end"
-        :status="i === drawingStartIdx ? 'active' : 'default'"
+        status="default"
         @click.stop="onPointClick(i)"
+      />
+      <PointSymbol
+        v-if="isDrawing && drawingStartCoords"
+        :x="drawingStartCoords[0]"
+        :y="drawingStartCoords[1]"
+        type="start/end"
+        status="active"
+        @click.stop
       />
     </svg>
     <div

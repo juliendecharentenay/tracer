@@ -1,16 +1,16 @@
 import { ref, computed } from 'vue'
 
 export function useTracingState() {
-  const drawingStartIdx = ref(null)
-  const isDrawing = computed(() => drawingStartIdx.value !== null)
+  const drawingStartCoords = ref(null) // [x, y] | null
+  const isDrawing = computed(() => drawingStartCoords.value !== null)
 
-  function beginDraw(idx) {
-    drawingStartIdx.value = idx
+  function beginDraw(x, y) {
+    drawingStartCoords.value = [x, y]
   }
 
   function cancelDraw() {
-    drawingStartIdx.value = null
+    drawingStartCoords.value = null
   }
 
-  return { drawingStartIdx, isDrawing, beginDraw, cancelDraw }
+  return { drawingStartCoords, isDrawing, beginDraw, cancelDraw }
 }
