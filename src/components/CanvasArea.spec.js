@@ -35,6 +35,10 @@ describe('CanvasArea', () => {
           commitLine:          vi.fn(),
           drawingStartCoords:  ref(null),
           canvasCursor:        ref(null),
+          hoveredPathIndex:    ref(null),
+          selectedPathIndex:   ref(null),
+          setHoveredPathIndex: vi.fn(),
+          setSelectedPathIndex: vi.fn(),
           ...extra,
         },
       },
@@ -352,6 +356,295 @@ describe('CanvasArea', () => {
       })
       await loadImage(wrapper, 1000, 500)
       expect(wrapper.findAllComponents(PointSymbol)).toHaveLength(0)
+    })
+  })
+
+  describe('path hover handlers', () => {
+    it('calls setHoveredPathIndex on mouseenter of a path', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const setHoveredPathIndex = vi.fn()
+      const wrapper = createWrapper(1000, 800, state, { setHoveredPathIndex })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('mouseenter')
+      expect(setHoveredPathIndex).toHaveBeenCalledWith(0)
+    })
+
+    it('calls setHoveredPathIndex(null) on mouseleave of a path', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const setHoveredPathIndex = vi.fn()
+      const wrapper = createWrapper(1000, 800, state, { setHoveredPathIndex })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('mouseleave')
+      expect(setHoveredPathIndex).toHaveBeenCalledWith(null)
+    })
+  })
+
+  describe('path click selection state machine', () => {
+    async function setupWithPaths() {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60], [100, 150]],
+            controlPoints: [],
+            paths: [
+              { type: 'line', points: [0, 1], controlPoints: [] },
+              { type: 'line', points: [1, 2], controlPoints: [] },
+            ],
+          },
+        },
+      })
+      return state
+    }
+
+    // Row 1: No selection + Canvas background → Start drawing
+    it('starts drawing when clicking background with no selection', async () => {
+      const beginDraw = vi.fn()
+      const setSelectedPathIndex = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(null),
+        beginDraw,
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      await wrapper.find('svg').trigger('click')
+      expect(beginDraw).toHaveBeenCalled()
+      expect(setSelectedPathIndex).not.toHaveBeenCalled()
+    })
+
+    // Row 2: No selection + Path element → Select that path
+    it('selects a path when clicking it with no selection', async () => {
+      const setSelectedPathIndex = vi.fn()
+      const beginDraw = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(null),
+        setSelectedPathIndex,
+        beginDraw,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('click')
+      expect(setSelectedPathIndex).toHaveBeenCalledWith(0)
+      expect(beginDraw).not.toHaveBeenCalled()
+    })
+
+    // Row 3: No selection + Point symbol → Start drawing
+    it('starts drawing when clicking a point symbol with no selection', async () => {
+      const beginDraw = vi.fn()
+      const setSelectedPathIndex = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(null),
+        beginDraw,
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('click')
+      expect(beginDraw).toHaveBeenCalledWith(10, 20)
+      expect(setSelectedPathIndex).not.toHaveBeenCalled()
+    })
+
+    // Row 4: Line selected + Canvas background → Deselect the line
+    it('deselects when clicking background with a selection', async () => {
+      const setSelectedPathIndex = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(0),
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      await wrapper.find('svg').trigger('click')
+      expect(setSelectedPathIndex).toHaveBeenCalledWith(null)
+    })
+
+    // Row 5: Line selected + Different path → Deselect original, select new
+    it('switches selection when clicking a different path', async () => {
+      const setSelectedPathIndex = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(0),
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[1].trigger('click')
+      expect(setSelectedPathIndex).toHaveBeenCalledWith(1)
+    })
+
+    // Row 6: Line selected + Point symbol → Deselect the line
+    it('deselects when clicking a point symbol with a selection', async () => {
+      const setSelectedPathIndex = vi.fn()
+      const state = await setupWithPaths()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(0),
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('click')
+      expect(setSelectedPathIndex).toHaveBeenCalledWith(null)
+    })
+  })
+
+  describe('path click while drawing', () => {
+    it('commits the line when clicking a path while drawing', async () => {
+      const commitLine = vi.fn()
+      const setSelectedPathIndex = vi.fn()
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(true),
+        drawingStartCoords: ref([5, 10]),
+        commitLine,
+        setSelectedPathIndex,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('click')
+      expect(commitLine).toHaveBeenCalledWith(100, 200)
+      expect(setSelectedPathIndex).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('point click selection', () => {
+    it('deselects when clicking a point symbol while a path is selected', async () => {
+      const setSelectedPathIndex = vi.fn()
+      const beginDraw = vi.fn()
+      const state = makeState({ width: 1000, height: 500 }, [[50, 75], [200, 300]])
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(0),
+        setSelectedPathIndex,
+        beginDraw,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[1].trigger('click')
+      expect(setSelectedPathIndex).toHaveBeenCalledWith(null)
+      expect(beginDraw).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('path visual states', () => {
+    it('renders a path with default stroke when not hovered or selected', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        hoveredPathIndex:  ref(null),
+        selectedPathIndex: ref(null),
+      })
+      await loadImage(wrapper, 1000, 500)
+      const path = wrapper.find('svg path')
+      expect(path.attributes('stroke')).toBe('currentColor')
+      expect(path.attributes('stroke-width')).toBe('1')
+    })
+
+    it('renders a path with increased stroke when hovered', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        hoveredPathIndex:  ref(0),
+        selectedPathIndex: ref(null),
+      })
+      await loadImage(wrapper, 1000, 500)
+      const path = wrapper.find('svg path')
+      expect(path.attributes('stroke')).toBe('currentColor')
+      expect(path.attributes('stroke-width')).toBe('2')
+    })
+
+    it('renders a path with blue stroke when selected', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        hoveredPathIndex:  ref(null),
+        selectedPathIndex: ref(0),
+      })
+      await loadImage(wrapper, 1000, 500)
+      const path = wrapper.find('svg path')
+      expect(path.attributes('stroke')).toBe('#2563eb')
+      expect(path.attributes('stroke-width')).toBe('2')
+    })
+
+    it('prefers selected state over hover state', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        hoveredPathIndex:  ref(0),
+        selectedPathIndex: ref(0),
+      })
+      await loadImage(wrapper, 1000, 500)
+      const path = wrapper.find('svg path')
+      expect(path.attributes('stroke')).toBe('#2563eb')
+      expect(path.attributes('stroke-width')).toBe('2')
     })
   })
 })

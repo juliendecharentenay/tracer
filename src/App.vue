@@ -14,7 +14,7 @@ import CopySvgButton from '@/components/CopySvgButton.vue'
 
 const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
-const { drawingStartCoords, isDrawing, beginDraw, cancelDraw } = useTracingState()
+const { drawingStartCoords, hoveredPathIndex, selectedPathIndex, isDrawing, beginDraw, cancelDraw, setHoveredPathIndex, setSelectedPathIndex } = useTracingState()
 const canvasCursor = ref(null)
 
 provide('state', state)
@@ -28,6 +28,10 @@ provide('isDrawing', isDrawing)
 provide('beginDraw', beginDraw)
 provide('cancelDraw', cancelDraw)
 provide('canvasCursor', canvasCursor)
+provide('hoveredPathIndex', hoveredPathIndex)
+provide('selectedPathIndex', selectedPathIndex)
+provide('setHoveredPathIndex', setHoveredPathIndex)
+provide('setSelectedPathIndex', setSelectedPathIndex)
 provide('commitLine', (endX, endY) => {
   const [startX, startY] = drawingStartCoords.value
   const startIdx = addPoint(startX, startY)

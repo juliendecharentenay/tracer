@@ -37,4 +37,40 @@ describe('useTracingState', () => {
     cancelDraw()
     expect(drawingStartCoords.value).toBeNull()
   })
+
+  it('hoveredPathIndex is null initially', () => {
+    const { hoveredPathIndex } = useTracingState()
+    expect(hoveredPathIndex.value).toBeNull()
+  })
+
+  it('setHoveredPathIndex sets the index', () => {
+    const { hoveredPathIndex, setHoveredPathIndex } = useTracingState()
+    setHoveredPathIndex(2)
+    expect(hoveredPathIndex.value).toBe(2)
+  })
+
+  it('setHoveredPathIndex(null) clears the index', () => {
+    const { hoveredPathIndex, setHoveredPathIndex } = useTracingState()
+    setHoveredPathIndex(1)
+    setHoveredPathIndex(null)
+    expect(hoveredPathIndex.value).toBeNull()
+  })
+
+  it('selectedPathIndex is null initially', () => {
+    const { selectedPathIndex } = useTracingState()
+    expect(selectedPathIndex.value).toBeNull()
+  })
+
+  it('setSelectedPathIndex sets the index', () => {
+    const { selectedPathIndex, setSelectedPathIndex } = useTracingState()
+    setSelectedPathIndex(3)
+    expect(selectedPathIndex.value).toBe(3)
+  })
+
+  it('setSelectedPathIndex(null) clears the index', () => {
+    const { selectedPathIndex, setSelectedPathIndex } = useTracingState()
+    setSelectedPathIndex(2)
+    setSelectedPathIndex(null)
+    expect(selectedPathIndex.value).toBeNull()
+  })
 })

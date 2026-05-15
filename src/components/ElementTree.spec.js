@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import ElementTree from './ElementTree.vue'
 
 describe('ElementTree', () => {
-  function createWrapper(paths = []) {
+  function createWrapper(paths = [], extra = {}) {
     const state = reactive({
       canvas: {
         svg: {
@@ -18,7 +18,11 @@ describe('ElementTree', () => {
     return mount(ElementTree, {
       global: {
         provide: {
-          state
+          state,
+          hoveredPathIndex:  ref(null),
+          selectedPathIndex: ref(null),
+          setHoveredPathIndex: vi.fn(),
+          ...extra,
         }
       }
     })
@@ -103,5 +107,82 @@ describe('ElementTree', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.findAll('li')).toHaveLength(1)
+  })
+
+  describe('hover and selection styling', () => {
+    it('does not apply font-bold when entry is neither hovered nor selected', () => {
+      const paths = [{ type: 'line', points: [0, 1], controlPoints: [] }]
+      const wrapper = createWrapper(paths, {
+        hoveredPathIndex:  ref(null),
+        selectedPathIndex: ref(null),
+      })
+      const item = wrapper.find('li')
+      expect(item.classes()).not.toContain('font-bold')
+    })
+
+    it('applies font-bold when entry is hovered', () => {
+      const paths = [
+        { type: 'line', points: [0, 1], controlPoints: [] },
+        { type: 'line', points: [1, 2], controlPoints: [] }
+      ]
+      const wrapper = createWrapper(paths, {
+        hoveredPathIndex:  ref(0),
+        selectedPathIndex: ref(null),
+      })
+      const items = wrapper.findAll('li')
+      expect(items[0].classes()).toContain('font-bold')
+      expect(items[1].classes()).not.toContain('font-bold')
+    })
+
+    it('applies font-bold when entry is selected', () => {
+      const paths = [
+        { type: 'line', points: [0, 1], controlPoints: [] },
+        { type: 'line', points: [1, 2], controlPoints: [] }
+      ]
+      const wrapper = createWrapper(paths, {
+        hoveredPathIndex:  ref(null),
+        selectedPathIndex: ref(1),
+      })
+      const items = wrapper.findAll('li')
+      expect(items[0].classes()).not.toContain('font-bold')
+      expect(items[1].classes()).toContain('font-bold')
+    })
+
+    it('applies font-bold when entry is either hovered or selected', () => {
+      const paths = [
+        { type: 'line', points: [0, 1], controlPoints: [] },
+        { type: 'line', points: [1, 2], controlPoints: [] }
+      ]
+      const wrapper = createWrapper(paths, {
+        hoveredPathIndex:  ref(0),
+        selectedPathIndex: ref(1),
+      })
+      const items = wrapper.findAll('li')
+      expect(items[0].classes()).toContain('font-bold')
+      expect(items[1].classes()).toContain('font-bold')
+    })
+  })
+
+  describe('hover event handlers', () => {
+    it('calls setHoveredPathIndex with the index on mouseenter', () => {
+      const setHoveredPathIndex = vi.fn()
+      const paths = [
+        { type: 'line', points: [0, 1], controlPoints: [] },
+        { type: 'line', points: [1, 2], controlPoints: [] }
+      ]
+      const wrapper = createWrapper(paths, { setHoveredPathIndex })
+      const items = wrapper.findAll('li')
+      items[1].trigger('mouseenter')
+      expect(setHoveredPathIndex).toHaveBeenCalledWith(1)
+    })
+
+    it('calls setHoveredPathIndex(null) on mouseleave', () => {
+      const setHoveredPathIndex = vi.fn()
+      const paths = [{ type: 'line', points: [0, 1], controlPoints: [] }]
+      const wrapper = createWrapper(paths, { setHoveredPathIndex })
+      const item = wrapper.find('li')
+      item.trigger('mouseleave')
+      expect(setHoveredPathIndex).toHaveBeenCalledWith(null)
+    })
   })
 })

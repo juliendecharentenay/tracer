@@ -150,21 +150,21 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 7 — Hover and selection
 
 ### 18. Hover highlighting
-- [ ] **Hover highlighting**
+- [x] **Hover highlighting**
 
   When the user hovers over a `<path>` element on the canvas, increase its stroke weight (hover visual state). Simultaneously bold the corresponding entry in the element tree. The reverse also applies: hovering an entry in the element tree increases the stroke weight of the matching path. Both directions use a shared `hoveredPathIndex` reactive reference. Write unit tests for the hover-state logic.
 
   **Success criteria:** mousing over a drawn line bolds its tree entry; mousing over a tree entry thickens the corresponding line.
 
 ### 19. Path selection — click behaviour
-- [ ] **Path selection — click behaviour**
+- [x] **Path selection — click behaviour**
 
   Implement the full click-selection state machine as described in the specification table. Clicking a path element when nothing is selected selects it (sets `selectedPathIndex`). Clicking the canvas background or a point symbol deselects. Clicking a different path while one is selected deselects the original and selects the new one. Clicking a point symbol in idle state starts drawing, not a selection. Write unit tests for each state transition.
 
   **Success criteria:** all six rows of the click-behaviour table are covered by passing unit tests.
 
 ### 20. Selection visual state
-- [ ] **Selection visual state**
+- [x] **Selection visual state**
 
   When a path is selected, render it with a visually distinct style that differs from both the default and hovered states (e.g. a different colour or dashed stroke). The corresponding element tree entry is also bolded. The selection style is removed when the path is deselected.
 

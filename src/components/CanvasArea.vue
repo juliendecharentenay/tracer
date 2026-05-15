@@ -14,6 +14,10 @@ const cancelDraw         = inject('cancelDraw')
 const commitLine         = inject('commitLine')
 const drawingStartCoords = inject('drawingStartCoords')
 const canvasCursor       = inject('canvasCursor')
+const hoveredPathIndex   = inject('hoveredPathIndex')
+const selectedPathIndex  = inject('selectedPathIndex')
+const setHoveredPathIndex = inject('setHoveredPathIndex')
+const setSelectedPathIndex = inject('setSelectedPathIndex')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
@@ -70,15 +74,20 @@ function onPointClick(idx) {
   const [px, py] = state.canvas.svg.points[idx]
   if (isDrawing.value) {
     commitLine(px, py)
+  } else if (selectedPathIndex.value !== null) {
+    setSelectedPathIndex(null)
   } else {
     beginDraw(px, py)
   }
 }
 
-function onPathClick(evt) {
-  if (!isDrawing.value) return
-  const { x, y } = mapMouseEvent(evt)
-  commitLine(x, y)
+function onPathClick(pathIdx, evt) {
+  if (isDrawing.value) {
+    const { x, y } = mapMouseEvent(evt)
+    commitLine(x, y)
+  } else {
+    setSelectedPathIndex(pathIdx)
+  }
 }
 
 function onBackgroundClick(evt) {
@@ -86,6 +95,8 @@ function onBackgroundClick(evt) {
   const { x, y } = mapMouseEvent(evt)
   if (isDrawing.value) {
     commitLine(x, y)
+  } else if (selectedPathIndex.value !== null) {
+    setSelectedPathIndex(null)
   } else {
     beginDraw(x, y)
   }
@@ -118,8 +129,11 @@ function onBackgroundClick(evt) {
         :key="i"
         :d="pathD(p)"
         fill="none"
-        stroke="currentColor"
-        @click="onPathClick"
+        :stroke="selectedPathIndex === i ? '#2563eb' : 'currentColor'"
+        :stroke-width="selectedPathIndex === i || hoveredPathIndex === i ? 2 : 1"
+        @mouseenter="setHoveredPathIndex(i)"
+        @mouseleave="setHoveredPathIndex(null)"
+        @click="onPathClick(i, $event)"
       />
       <path
         v-if="previewD"
