@@ -13,10 +13,10 @@ const beginDraw          = inject('beginDraw')
 const cancelDraw         = inject('cancelDraw')
 const commitLine         = inject('commitLine')
 const drawingStartCoords = inject('drawingStartCoords')
+const canvasCursor       = inject('canvasCursor')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
-const cursor = ref(null)
 
 const { mapMouseEvent } = useCoordinateMapper()
 
@@ -47,17 +47,17 @@ const viewBox = computed(() => {
 })
 
 const previewD = computed(() => {
-  if (!isDrawing.value || !cursor.value || !drawingStartCoords.value) return null
+  if (!isDrawing.value || !canvasCursor.value || !drawingStartCoords.value) return null
   const [x1, y1] = drawingStartCoords.value
-  return `M ${x1} ${y1} L ${cursor.value.x} ${cursor.value.y}`
+  return `M ${x1} ${y1} L ${canvasCursor.value.x} ${canvasCursor.value.y}`
 })
 
 function onMouseMove(evt) {
-  cursor.value = mapMouseEvent(evt)
+  canvasCursor.value = mapMouseEvent(evt)
 }
 
 function onMouseLeave() {
-  cursor.value = null
+  canvasCursor.value = null
 }
 
 function pathD(path) {
@@ -147,11 +147,5 @@ function onBackgroundClick(evt) {
         @click.stop
       />
     </svg>
-    <div
-      v-if="cursor"
-      class="absolute bottom-1 right-1 bg-black/60 text-white text-xs font-mono px-2 py-1 rounded pointer-events-none select-none"
-    >
-      {{ cursor.x }}, {{ cursor.y }}
-    </div>
   </div>
 </template>

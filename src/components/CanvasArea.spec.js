@@ -34,6 +34,7 @@ describe('CanvasArea', () => {
           cancelDraw:          vi.fn(),
           commitLine:          vi.fn(),
           drawingStartCoords:  ref(null),
+          canvasCursor:        ref(null),
           ...extra,
         },
       },
@@ -134,6 +135,7 @@ describe('CanvasArea', () => {
           cancelDraw:         vi.fn(),
           commitLine:         vi.fn(),
           drawingStartCoords: ref(null),
+          canvasCursor:       ref(null),
         },
       },
     })

@@ -8,10 +8,14 @@ import ImportButton from '@/components/ImportButton.vue'
 import CropOverlay from '@/components/CropOverlay.vue'
 import CanvasArea from '@/components/CanvasArea.vue'
 import ViewBoxConfig from '@/components/ViewBoxConfig.vue'
+import ElementTree from '@/components/ElementTree.vue'
+import CursorCoordinates from '@/components/CursorCoordinates.vue'
+import CopySvgButton from '@/components/CopySvgButton.vue'
 
 const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 const { drawingStartCoords, isDrawing, beginDraw, cancelDraw } = useTracingState()
+const canvasCursor = ref(null)
 
 provide('state', state)
 provide('setImageBase64', setImageBase64)
@@ -23,6 +27,7 @@ provide('drawingStartCoords', drawingStartCoords)
 provide('isDrawing', isDrawing)
 provide('beginDraw', beginDraw)
 provide('cancelDraw', cancelDraw)
+provide('canvasCursor', canvasCursor)
 provide('commitLine', (endX, endY) => {
   const [startX, startY] = drawingStartCoords.value
   const startIdx = addPoint(startX, startY)
@@ -89,7 +94,17 @@ async function onCrop() {
       </button>
     </div>
 
-    <div v-else class="flex flex-col items-center">
+    <div v-else class="relative w-full h-screen flex flex-col items-center">
+      <!-- Top-left panel: ElementTree -->
+      <ElementTree v-if="state.canvas.parameters" class="fixed top-4 left-4 z-10 max-w-xs max-h-[80vh] overflow-auto" />
+
+      <!-- Top-right panel: Cursor + Copy button -->
+      <div v-if="state.canvas.parameters" class="fixed top-4 right-4 z-10 flex flex-col gap-2">
+        <CopySvgButton />
+        <CursorCoordinates :cursor="canvasCursor" />
+      </div>
+
+      <!-- Canvas in center -->
       <CanvasArea :src="state.image.crop.base64" />
       <ViewBoxConfig v-if="!state.canvas.parameters" />
     </div>
