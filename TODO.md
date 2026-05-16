@@ -193,14 +193,14 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 9 — Cubic Bézier
 
 ### 23. Toggle line ↔ cubic Bézier (double click)
-- [ ] **Toggle line ↔ cubic Bézier (double click)**
+- [x] **Toggle line ↔ cubic Bézier (double click)**
 
   Double-clicking a `<path>` element toggles it between `"line"` and `"cubicBezier"`. On the first switch to Bézier, two control points are created at the 1/3 and 2/3 positions along the original line and stored in `controlPoints`; their indices are saved in the path's `controlPoints` array. On subsequent toggles, the previously stored control point indices are reused so the positions are preserved across round-trips. Write unit tests for the initial control-point placement calculation.
 
   **Success criteria:** double-clicking a line converts it to a Bézier rendered with the `C` command; double-clicking again converts it back to `L`; control point positions survive the round-trip.
 
 ### 24. Control point symbols and drag (cubic Bézier)
-- [ ] **Control point symbols and drag (cubic Bézier)**
+- [x] **Control point symbols and drag (cubic Bézier)**
 
   When a `"cubicBezier"` path is selected, render its two control points as non-filled square symbols on the canvas. These symbols are draggable and update the corresponding entry in the `controlPoints` array (private to the path — no deduplication). Control point symbols are hidden when the path is not selected or is a `"line"`. Write unit tests for the drag-update logic.
 

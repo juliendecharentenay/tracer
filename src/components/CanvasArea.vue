@@ -18,11 +18,14 @@ const hoveredPathIndex   = inject('hoveredPathIndex')
 const selectedPathIndex  = inject('selectedPathIndex')
 const setHoveredPathIndex = inject('setHoveredPathIndex')
 const setSelectedPathIndex = inject('setSelectedPathIndex')
-const updatePoint        = inject('updatePoint')
+const updatePoint          = inject('updatePoint')
+const updateControlPoint   = inject('updateControlPoint')
+const togglePathType       = inject('togglePathType')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
 const draggingPointIdx = ref(null)
+const draggingControlPointIdx = ref(null)
 const hasDragged = ref(false) // Used to distinguish between click on point to start drawing and click on point to drag it
 
 const { mapMouseEvent } = useCoordinateMapper()
@@ -65,12 +68,22 @@ const selectedPathPointIndices = computed(() => {
   return path ? new Set(path.points) : new Set()
 })
 
+const selectedPathControlPointIndices = computed(() => {
+  if (selectedPathIndex.value === null) return []
+  const path = state.canvas.svg.paths[selectedPathIndex.value]
+  if (!path || path.type !== 'cubicBezier') return []
+  return path.controlPoints
+})
+
 function onMouseMove(evt) {
   const coords = mapMouseEvent(evt)
   canvasCursor.value = coords
   if (draggingPointIdx.value !== null) {
     updatePoint(draggingPointIdx.value, coords.x, coords.y)
     hasDragged.value = true
+  }
+  if (draggingControlPointIdx.value !== null) {
+    updateControlPoint(draggingControlPointIdx.value, coords.x, coords.y)
   }
 }
 
@@ -80,12 +93,31 @@ function onMouseLeave() {
 
 function onMouseUp() {
   draggingPointIdx.value = null
+  draggingControlPointIdx.value = null
 }
 
 function pathD(path) {
   const [x1, y1] = state.canvas.svg.points[path.points[0]]
   const [x2, y2] = state.canvas.svg.points[path.points[1]]
-  return `M ${x1} ${y1} L ${x2} ${y2}`
+  if (path.type === 'cubicBezier') {
+    const [cx1, cy1] = state.canvas.svg.controlPoints[path.controlPoints[0]]
+    const [cx2, cy2] = state.canvas.svg.controlPoints[path.controlPoints[1]]
+    return `M ${x1} ${y1} C ${cx1} ${cy1} ${cx2} ${cy2} ${x2} ${y2}`
+  } else if (path.type === 'line') {
+    return `M ${x1} ${y1} L ${x2} ${y2}`
+  } else {
+    throw new Error(`path type ${path.type} is not supported`);
+  }
+}
+
+function onPathDblClick(pathIdx) {
+  if (isDrawing.value) return
+  togglePathType(pathIdx)
+}
+
+function onControlPointMouseDown(cpIdx, evt) {
+  draggingControlPointIdx.value = cpIdx
+  evt.stopPropagation()
 }
 
 function onPointMouseDown(idx, evt) {
@@ -165,6 +197,7 @@ function onBackgroundClick(evt) {
         @mouseenter="setHoveredPathIndex(i)"
         @mouseleave="setHoveredPathIndex(null)"
         @click="onPathClick(i, $event)"
+        @dblclick.stop="onPathDblClick(i)"
       />
       <path
         v-if="previewD"
@@ -191,6 +224,15 @@ function onBackgroundClick(evt) {
         type="start/end"
         status="active"
         @click.stop
+      />
+      <PointSymbol
+        v-for="cpIdx in selectedPathControlPointIndices"
+        :key="'cp-' + cpIdx"
+        :x="state.canvas.svg.controlPoints[cpIdx][0]"
+        :y="state.canvas.svg.controlPoints[cpIdx][1]"
+        type="control"
+        status="default"
+        @mousedown.stop="onControlPointMouseDown(cpIdx, $event)"
       />
     </svg>
   </div>

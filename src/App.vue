@@ -12,7 +12,7 @@ import ElementTree from '@/components/ElementTree.vue'
 import CursorCoordinates from '@/components/CursorCoordinates.vue'
 import CopySvgButton from '@/components/CopySvgButton.vue'
 
-const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath, updatePoint, removePath } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath, updatePoint, removePath, updateControlPoint, togglePathType } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 const { drawingStartCoords, hoveredPathIndex, selectedPathIndex, isDrawing, beginDraw, cancelDraw, setHoveredPathIndex, setSelectedPathIndex } = useTracingState()
 const canvasCursor = ref(null)
@@ -33,6 +33,8 @@ provide('selectedPathIndex', selectedPathIndex)
 provide('setHoveredPathIndex', setHoveredPathIndex)
 provide('setSelectedPathIndex', setSelectedPathIndex)
 provide('updatePoint', updatePoint)
+provide('updateControlPoint', updateControlPoint)
+provide('togglePathType', togglePathType)
 provide('removePath', removePath)
 provide('commitLine', (endX, endY) => {
   const [startX, startY] = drawingStartCoords.value

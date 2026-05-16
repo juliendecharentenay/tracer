@@ -130,4 +130,86 @@ describe('useSvgData', () => {
     expect(a.data.points).toHaveLength(1)
     expect(b.data.points).toHaveLength(0)
   })
+
+  describe('addControlPoint', () => {
+    it('pushes a rounded coordinate pair and returns its index', () => {
+      const { data, addControlPoint } = useSvgData()
+      const idx = addControlPoint(10.6, 20.3)
+      expect(idx).toBe(0)
+      expect(data.controlPoints[0]).toEqual([11, 20])
+    })
+
+    it('does not deduplicate — each call creates a new entry', () => {
+      const { data, addControlPoint } = useSvgData()
+      addControlPoint(10, 20)
+      addControlPoint(10, 20)
+      expect(data.controlPoints).toHaveLength(2)
+    })
+  })
+
+  describe('togglePathType', () => {
+    function makeLineSetup() {
+      const s = useSvgData()
+      s.addPoint(0, 0)
+      s.addPoint(90, 90)
+      s.addPath('line', 0, 1)
+      return s
+    }
+
+    it('converts a line to cubicBezier', () => {
+      const { data, togglePathType } = makeLineSetup()
+      togglePathType(0)
+      expect(data.paths[0].type).toBe('cubicBezier')
+    })
+
+    it('places control points at 1/3 and 2/3 of the line on first toggle', () => {
+      const { data, togglePathType } = makeLineSetup()
+      togglePathType(0)
+      expect(data.controlPoints).toHaveLength(2)
+      expect(data.controlPoints[0]).toEqual([30, 30])
+      expect(data.controlPoints[1]).toEqual([60, 60])
+    })
+
+    it('stores the two control point indices in path.controlPoints', () => {
+      const { data, togglePathType } = makeLineSetup()
+      togglePathType(0)
+      expect(data.paths[0].controlPoints).toEqual([0, 1])
+    })
+
+    it('converts a cubicBezier back to line without adding new control points', () => {
+      const { data, togglePathType } = makeLineSetup()
+      togglePathType(0)
+      togglePathType(0)
+      expect(data.paths[0].type).toBe('line')
+      expect(data.controlPoints).toHaveLength(2)
+    })
+
+    it('reuses existing control points on round-trip back to cubicBezier', () => {
+      const { data, togglePathType } = makeLineSetup()
+      togglePathType(0)
+      togglePathType(0)
+      togglePathType(0)
+      expect(data.paths[0].type).toBe('cubicBezier')
+      expect(data.controlPoints).toHaveLength(2)
+      expect(data.paths[0].controlPoints).toEqual([0, 1])
+    })
+  })
+
+  describe('updateControlPoint', () => {
+    it('updates the coordinates at the given control point index', () => {
+      const { data, addControlPoint, updateControlPoint } = useSvgData()
+      addControlPoint(10, 20)
+      addControlPoint(30, 40)
+      updateControlPoint(0, 99, 88)
+      expect(data.controlPoints[0]).toEqual([99, 88])
+      expect(data.controlPoints[1]).toEqual([30, 40])
+    })
+
+    it('rounds coordinates to integers', () => {
+      const { data, addControlPoint, updateControlPoint } = useSvgData()
+      addControlPoint(0, 0)
+      updateControlPoint(0, 42.7, 99.2)
+      expect(data.controlPoints[0]).toEqual([43, 99])
+    })
+  })
 })

@@ -30,5 +30,31 @@ export function useSvgData() {
     data.paths.splice(idx, 1)
   }
 
-  return { data, addPoint, addPath, updatePoint, removePath }
+  function addControlPoint(x, y) {
+    data.controlPoints.push([Math.round(x), Math.round(y)])
+    return data.controlPoints.length - 1
+  }
+
+  function updateControlPoint(idx, x, y) {
+    data.controlPoints[idx] = [Math.round(x), Math.round(y)]
+  }
+
+  function togglePathType(pathIdx) {
+    const path = data.paths[pathIdx]
+    if (!path) return
+    if (path.type === 'line') {
+      if (path.controlPoints.length === 0) {
+        const [x1, y1] = data.points[path.points[0]]
+        const [x2, y2] = data.points[path.points[1]]
+        const cp1Idx = addControlPoint(x1 + (x2 - x1) / 3, y1 + (y2 - y1) / 3)
+        const cp2Idx = addControlPoint(x1 + 2 * (x2 - x1) / 3, y1 + 2 * (y2 - y1) / 3)
+        path.controlPoints = [cp1Idx, cp2Idx]
+      }
+      path.type = 'cubicBezier'
+    } else {
+      path.type = 'line'
+    }
+  }
+
+  return { data, addPoint, addPath, updatePoint, removePath, addControlPoint, updateControlPoint, togglePathType }
 }

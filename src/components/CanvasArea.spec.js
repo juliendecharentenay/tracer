@@ -40,6 +40,8 @@ describe('CanvasArea', () => {
           setHoveredPathIndex: vi.fn(),
           setSelectedPathIndex: vi.fn(),
           updatePoint: vi.fn(),
+          updateControlPoint: vi.fn(),
+          togglePathType: vi.fn(),
           ...extra,
         },
       },
@@ -719,6 +721,203 @@ describe('CanvasArea', () => {
       const path = wrapper.find('svg path')
       expect(path.attributes('stroke')).toBe('#2563eb')
       expect(path.attributes('stroke-width')).toBe('2')
+    })
+  })
+
+  describe('cubicBezier path rendering', () => {
+    it('renders a cubicBezier path with the C command', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [[20, 30], [40, 50]],
+            paths: [{ type: 'cubicBezier', points: [0, 1], controlPoints: [0, 1] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state)
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      expect(paths[0].attributes('d')).toBe('M 10 20 C 20 30 40 50 50 60')
+    })
+
+    it('renders a line path with the L command', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state)
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      expect(paths[0].attributes('d')).toBe('M 10 20 L 50 60')
+    })
+  })
+
+  describe('double-click to toggle path type', () => {
+    it('calls togglePathType with the path index on dblclick', async () => {
+      const togglePathType = vi.fn()
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, { togglePathType })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('dblclick')
+      expect(togglePathType).toHaveBeenCalledWith(0)
+    })
+
+    it('does not call togglePathType when double-clicking while drawing', async () => {
+      const togglePathType = vi.fn()
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing: ref(true),
+        drawingStartCoords: ref([5, 5]),
+        togglePathType,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const paths = wrapper.find('svg').findAll('path')
+      await paths[0].trigger('dblclick')
+      expect(togglePathType).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('control point symbols', () => {
+    function makeBezierState() {
+      return reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [[20, 30], [40, 50]],
+            paths: [{ type: 'cubicBezier', points: [0, 1], controlPoints: [0, 1] }],
+          },
+        },
+      })
+    }
+
+    it('renders two control point symbols when a cubicBezier path is selected', async () => {
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, { selectedPathIndex: ref(0) })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      expect(controlSymbols).toHaveLength(2)
+    })
+
+    it('positions control point symbols at their control point coordinates', async () => {
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, { selectedPathIndex: ref(0) })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      expect(controlSymbols[0].props('x')).toBe(20)
+      expect(controlSymbols[0].props('y')).toBe(30)
+      expect(controlSymbols[1].props('x')).toBe(40)
+      expect(controlSymbols[1].props('y')).toBe(50)
+    })
+
+    it('hides control point symbols when no path is selected', async () => {
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, { selectedPathIndex: ref(null) })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      expect(controlSymbols).toHaveLength(0)
+    })
+
+    it('hides control point symbols when the selected path is a line', async () => {
+      const state = reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+      const wrapper = createWrapper(1000, 800, state, { selectedPathIndex: ref(0) })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      expect(controlSymbols).toHaveLength(0)
+    })
+  })
+
+  describe('control point drag', () => {
+    function makeBezierState() {
+      return reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60]],
+            controlPoints: [[20, 30], [40, 50]],
+            paths: [{ type: 'cubicBezier', points: [0, 1], controlPoints: [0, 1] }],
+          },
+        },
+      })
+    }
+
+    it('calls updateControlPoint with mapped coords when dragging a control point symbol', async () => {
+      const updateControlPoint = vi.fn()
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, {
+        selectedPathIndex: ref(0),
+        updateControlPoint,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      await controlSymbols[0].trigger('mousedown')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updateControlPoint).toHaveBeenCalledWith(0, 100, 200)
+    })
+
+    it('stops updating after mouseup', async () => {
+      const updateControlPoint = vi.fn()
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, {
+        selectedPathIndex: ref(0),
+        updateControlPoint,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      await controlSymbols[0].trigger('mousedown')
+      await wrapper.find('svg').trigger('mouseup')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updateControlPoint).not.toHaveBeenCalled()
+    })
+
+    it('calls updateControlPoint for the second control point when dragging it', async () => {
+      const updateControlPoint = vi.fn()
+      const state = makeBezierState()
+      const wrapper = createWrapper(1000, 800, state, {
+        selectedPathIndex: ref(0),
+        updateControlPoint,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const controlSymbols = wrapper.findAllComponents(PointSymbol).filter(s => s.props('type') === 'control')
+      await controlSymbols[1].trigger('mousedown')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updateControlPoint).toHaveBeenCalledWith(1, 100, 200)
     })
   })
 })
