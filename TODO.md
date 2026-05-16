@@ -211,14 +211,14 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 10 — State persistence
 
 ### 25. Save state to localStorage
-- [ ] **Save state to localStorage**
+- [x] **Save state to localStorage**
 
   Implement a `usePersistence` composable that watches the full application state (`image.base64`, `image.crop`, `canvas.parameters`, `canvas.svg`) with a deep watcher and serialises it to `localStorage` as a JSON string on every change. Use the schema defined in the specification. Write unit tests using a mocked `localStorage`.
 
   **Success criteria:** after drawing a line, refreshing the page, and restoring state (see item 27) the line is still present.
 
 ### 26. Restore state from localStorage
-- [ ] **Restore state from localStorage**
+- [x] **Restore state from localStorage**
 
   On application startup, check `localStorage` for a previously saved state JSON string. If found, deserialise it and populate the reactive state (image, crop, canvas parameters, and SVG data). The application should resume in the tracing phase if a valid canvas state exists, or in the image-import phase otherwise. Write unit tests for the deserialisation and phase-detection logic.
 

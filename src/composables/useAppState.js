@@ -24,5 +24,17 @@ export function useAppState() {
     state.canvas.parameters = { width, height }
   }
 
-  return { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath, updatePoint, removePath, updateControlPoint, togglePathType }
+  function restoreState(persisted) {
+    state.image.base64 = persisted.image?.base64 ?? null
+    state.image.crop = persisted.image?.crop ?? null
+    state.canvas.parameters = persisted.canvas?.parameters ?? null
+    const svg = persisted.canvas?.svg
+    if (svg) {
+      state.canvas.svg.points = svg.points ?? []
+      state.canvas.svg.controlPoints = svg.controlPoints ?? []
+      state.canvas.svg.paths = svg.paths ?? []
+    }
+  }
+
+  return { state, setImageBase64, setCropResult, setCanvasParameters, restoreState, addPoint, addPath, updatePoint, removePath, updateControlPoint, togglePathType }
 }

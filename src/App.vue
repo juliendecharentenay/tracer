@@ -1,6 +1,7 @@
 <script setup>
 import { provide, onMounted, onUnmounted, ref } from 'vue'
 import { useAppState } from '@/composables/useAppState'
+import { usePersistence, loadPersistedState } from '@/composables/usePersistence'
 import { useWindowSize } from '@/composables/useWindowSize'
 import { useTracingState } from '@/composables/useTracingState'
 import { cropImage } from '@/utils/cropImage'
@@ -12,7 +13,12 @@ import ElementTree from '@/components/ElementTree.vue'
 import CursorCoordinates from '@/components/CursorCoordinates.vue'
 import CopySvgButton from '@/components/CopySvgButton.vue'
 
-const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath, updatePoint, removePath, updateControlPoint, togglePathType } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters, restoreState, addPoint, addPath, updatePoint, removePath, updateControlPoint, togglePathType } = useAppState()
+
+const persisted = loadPersistedState()
+if (persisted) restoreState(persisted)
+
+usePersistence(state)
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 const { drawingStartCoords, hoveredPathIndex, selectedPathIndex, isDrawing, beginDraw, cancelDraw, setHoveredPathIndex, setSelectedPathIndex } = useTracingState()
 const canvasCursor = ref(null)
