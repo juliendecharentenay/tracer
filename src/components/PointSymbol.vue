@@ -18,5 +18,6 @@ const props = defineProps({
     :fill="type === 'control' ? 'none' : 'currentColor'"
     :stroke="type === 'control' ? 'currentColor' : 'none'"
     :class="status === 'active' ? 'text-orange-400' : 'text-blue-500'"
+    style="pointer-events: all; cursor: crosshair"
   />
 </template>
