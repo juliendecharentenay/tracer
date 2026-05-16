@@ -20,5 +20,15 @@ export function useSvgData() {
     data.paths.push({ type, points: [startIdx, endIdx], controlPoints: [] })
   }
 
-  return { data, addPoint, addPath }
+  function updatePoint(idx, x, y) {
+    data.points[idx] = [Math.round(x), Math.round(y)]
+  }
+
+  function removePath(idx) {
+    // Points referenced only by the removed path are left in data.points; their
+    // indices remain stable so any current paths can still reference them correctly.
+    data.paths.splice(idx, 1)
+  }
+
+  return { data, addPoint, addPath, updatePoint, removePath }
 }

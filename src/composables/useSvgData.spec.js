@@ -75,6 +75,54 @@ describe('useSvgData', () => {
     })
   })
 
+  describe('updatePoint', () => {
+    it('updates the coordinates at the given index', () => {
+      const { data, addPoint, updatePoint } = useSvgData()
+      addPoint(10, 20)
+      addPoint(30, 40)
+      updatePoint(0, 99, 88)
+      expect(data.points[0]).toEqual([99, 88])
+      expect(data.points[1]).toEqual([30, 40])
+    })
+
+    it('rounds coordinates to integers', () => {
+      const { data, addPoint, updatePoint } = useSvgData()
+      addPoint(0, 0)
+      updatePoint(0, 42.7, 99.2)
+      expect(data.points[0]).toEqual([43, 99])
+    })
+  })
+
+  describe('removePath', () => {
+    it('removes exactly the path at the given index', () => {
+      const { data, addPoint, addPath, removePath } = useSvgData()
+      addPoint(0, 0); addPoint(10, 10); addPoint(20, 20)
+      addPath('line', 0, 1)
+      addPath('line', 1, 2)
+      addPath('line', 0, 2)
+      removePath(1)
+      expect(data.paths).toHaveLength(2)
+      expect(data.paths[0].points).toEqual([0, 1])
+      expect(data.paths[1].points).toEqual([0, 2])
+    })
+
+    it('leaves data.paths empty when the only path is removed', () => {
+      const { data, addPoint, addPath, removePath } = useSvgData()
+      addPoint(0, 0); addPoint(10, 10)
+      addPath('line', 0, 1)
+      removePath(0)
+      expect(data.paths).toHaveLength(0)
+    })
+
+    it('leaves data.points unchanged after removing a path', () => {
+      const { data, addPoint, addPath, removePath } = useSvgData()
+      addPoint(0, 0); addPoint(10, 10)
+      addPath('line', 0, 1)
+      removePath(0)
+      expect(data.points).toHaveLength(2)
+    })
+  })
+
   it('each call to useSvgData produces independent state', () => {
     const a = useSvgData()
     const b = useSvgData()

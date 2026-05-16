@@ -12,7 +12,7 @@ import ElementTree from '@/components/ElementTree.vue'
 import CursorCoordinates from '@/components/CursorCoordinates.vue'
 import CopySvgButton from '@/components/CopySvgButton.vue'
 
-const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath } = useAppState()
+const { state, setImageBase64, setCropResult, setCanvasParameters, addPoint, addPath, updatePoint, removePath } = useAppState()
 const { innerWidth, innerHeight, onResize } = useWindowSize()
 const { drawingStartCoords, hoveredPathIndex, selectedPathIndex, isDrawing, beginDraw, cancelDraw, setHoveredPathIndex, setSelectedPathIndex } = useTracingState()
 const canvasCursor = ref(null)
@@ -32,6 +32,8 @@ provide('hoveredPathIndex', hoveredPathIndex)
 provide('selectedPathIndex', selectedPathIndex)
 provide('setHoveredPathIndex', setHoveredPathIndex)
 provide('setSelectedPathIndex', setSelectedPathIndex)
+provide('updatePoint', updatePoint)
+provide('removePath', removePath)
 provide('commitLine', (endX, endY) => {
   const [startX, startY] = drawingStartCoords.value
   const startIdx = addPoint(startX, startY)
@@ -42,6 +44,10 @@ provide('commitLine', (endX, endY) => {
 
 function onKeyDown(evt) {
   if (evt.key === 'Escape') cancelDraw()
+  if (evt.key === 'Delete' && selectedPathIndex.value !== null) {
+    removePath(selectedPathIndex.value)
+    setSelectedPathIndex(null)
+  }
 }
 
 onMounted(() => {

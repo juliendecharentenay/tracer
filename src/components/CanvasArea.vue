@@ -18,9 +18,12 @@ const hoveredPathIndex   = inject('hoveredPathIndex')
 const selectedPathIndex  = inject('selectedPathIndex')
 const setHoveredPathIndex = inject('setHoveredPathIndex')
 const setSelectedPathIndex = inject('setSelectedPathIndex')
+const updatePoint        = inject('updatePoint')
 
 const imgRef = ref(null)
 const naturalSize = ref(null)
+const draggingPointIdx = ref(null)
+const hasDragged = ref(false) // Used to distinguish between click on point to start drawing and click on point to drag it
 
 const { mapMouseEvent } = useCoordinateMapper()
 
@@ -56,12 +59,27 @@ const previewD = computed(() => {
   return `M ${x1} ${y1} L ${canvasCursor.value.x} ${canvasCursor.value.y}`
 })
 
+const selectedPathPointIndices = computed(() => {
+  if (selectedPathIndex.value === null) return new Set()
+  const path = state.canvas.svg.paths[selectedPathIndex.value]
+  return path ? new Set(path.points) : new Set()
+})
+
 function onMouseMove(evt) {
-  canvasCursor.value = mapMouseEvent(evt)
+  const coords = mapMouseEvent(evt)
+  canvasCursor.value = coords
+  if (draggingPointIdx.value !== null) {
+    updatePoint(draggingPointIdx.value, coords.x, coords.y)
+    hasDragged.value = true
+  }
 }
 
 function onMouseLeave() {
   canvasCursor.value = null
+}
+
+function onMouseUp() {
+  draggingPointIdx.value = null
 }
 
 function pathD(path) {
@@ -70,7 +88,19 @@ function pathD(path) {
   return `M ${x1} ${y1} L ${x2} ${y2}`
 }
 
+function onPointMouseDown(idx, evt) {
+  if (!isDrawing.value && selectedPathPointIndices.value.has(idx)) {
+    draggingPointIdx.value = idx
+    hasDragged.value = false
+    evt.stopPropagation()
+  }
+}
+
 function onPointClick(idx) {
+  if (hasDragged.value) {
+    hasDragged.value = false
+    return
+  }
   const [px, py] = state.canvas.svg.points[idx]
   if (isDrawing.value) {
     commitLine(px, py)
@@ -122,6 +152,7 @@ function onBackgroundClick(evt) {
       :viewBox="viewBox"
       @mousemove="onMouseMove"
       @mouseleave="onMouseLeave"
+      @mouseup="onMouseUp"
       @click.self="onBackgroundClick"
     >
       <path
@@ -150,6 +181,7 @@ function onBackgroundClick(evt) {
         :y="py"
         type="start/end"
         status="default"
+        @mousedown.stop="onPointMouseDown(i, $event)"
         @click.stop="onPointClick(i)"
       />
       <PointSymbol

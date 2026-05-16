@@ -39,6 +39,7 @@ describe('CanvasArea', () => {
           selectedPathIndex:   ref(null),
           setHoveredPathIndex: vi.fn(),
           setSelectedPathIndex: vi.fn(),
+          updatePoint: vi.fn(),
           ...extra,
         },
       },
@@ -546,6 +547,92 @@ describe('CanvasArea', () => {
       await symbols[1].trigger('click')
       expect(setSelectedPathIndex).toHaveBeenCalledWith(null)
       expect(beginDraw).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('draggable point handles', () => {
+    function makeStateWithPath() {
+      return reactive({
+        canvas: {
+          parameters: { width: 1000, height: 500 },
+          svg: {
+            points: [[10, 20], [50, 60], [90, 120]],
+            controlPoints: [],
+            paths: [{ type: 'line', points: [0, 1], controlPoints: [] }],
+          },
+        },
+      })
+    }
+
+    async function mountSelected(extra = {}) {
+      const state = makeStateWithPath()
+      const updatePoint = vi.fn()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(0),
+        updatePoint,
+        ...extra,
+      })
+      await loadImage(wrapper, 1000, 500)
+      return { wrapper, state, updatePoint }
+    }
+
+    it('calls updatePoint with mapped coords when mousemove occurs while dragging a selected-path point', async () => {
+      const { wrapper, updatePoint } = await mountSelected()
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('mousedown')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updatePoint).toHaveBeenCalledWith(0, 100, 200)
+    })
+
+    it('stops updating after mouseup', async () => {
+      const { wrapper, updatePoint } = await mountSelected()
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('mousedown')
+      await wrapper.find('svg').trigger('mouseup')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updatePoint).not.toHaveBeenCalled()
+    })
+
+    it('does not start drag on a point not belonging to the selected path', async () => {
+      const { wrapper, updatePoint } = await mountSelected()
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      // index 2 is not in the selected path's points ([0, 1])
+      await symbols[2].trigger('mousedown')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updatePoint).not.toHaveBeenCalled()
+    })
+
+    it('does not start drag when no path is selected', async () => {
+      const updatePoint = vi.fn()
+      const state = makeStateWithPath()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(null),
+        updatePoint,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('mousedown')
+      await wrapper.find('svg').trigger('mousemove')
+      expect(updatePoint).not.toHaveBeenCalled()
+    })
+
+    it('still calls beginDraw on click when no drag occurred', async () => {
+      const beginDraw = vi.fn()
+      const updatePoint = vi.fn()
+      const state = makeStateWithPath()
+      const wrapper = createWrapper(1000, 800, state, {
+        isDrawing:          ref(false),
+        selectedPathIndex:  ref(null),
+        beginDraw,
+        updatePoint,
+      })
+      await loadImage(wrapper, 1000, 500)
+      const symbols = wrapper.findAllComponents(PointSymbol)
+      await symbols[0].trigger('click')
+      expect(beginDraw).toHaveBeenCalledWith(10, 20)
+      expect(updatePoint).not.toHaveBeenCalled()
     })
   })
 

@@ -175,14 +175,14 @@ Each item is a self-contained unit of work. Items are ordered to follow the user
 ## Phase 8 — Point editing
 
 ### 21. Draggable point handles (selected path)
-- [ ] **Draggable point handles (selected path)**
+- [x] **Draggable point handles (selected path)**
 
   When a path is selected, its start and end point symbols become draggable. Dragging a point symbol updates the `[x, y]` value at the corresponding index in the shared `points` array. Because points are shared by index, all paths that reference the same index move simultaneously. Implement drag handling via `mousedown` / `mousemove` / `mouseup` events on the symbol. Write unit tests for the coordinate-update logic.
 
   **Success criteria:** dragging a shared point moves all connected paths' endpoints together.
 
 ### 22. Delete selected path
-- [ ] **Delete selected path**
+- [x] **Delete selected path**
 
   When a path is selected, pressing the **Delete** key removes the path object from the `paths` array. Unreferenced points (no longer used by any path) are left in the `points` array (safe to keep, as indices are stable). The selection is cleared after deletion. Write unit tests confirming the correct path is removed.
 
