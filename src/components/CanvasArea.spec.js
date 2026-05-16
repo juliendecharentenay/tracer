@@ -127,22 +127,9 @@ describe('CanvasArea', () => {
   it('recalculates dimensions reactively when innerWidth changes', async () => {
     const innerWidth  = ref(1000)
     const innerHeight = ref(800)
-    const wrapper = mount(CanvasArea, {
-      props: { src },
-      global: {
-        provide: {
-          state: makeState(),
-          innerWidth,
-          innerHeight,
-          isDrawing:          ref(false),
-          beginDraw:          vi.fn(),
-          cancelDraw:         vi.fn(),
-          commitLine:         vi.fn(),
-          drawingStartCoords: ref(null),
-          canvasCursor:       ref(null),
-        },
-      },
-    })
+    const wrapper = createWrapper(1000, 800, makeState(), {
+      innerWidth, innerHeight
+      })
     // 1000x500 image at 1000x800 viewport → 800×400
     await loadImage(wrapper, 1000, 500)
     expect(wrapper.find('img').attributes('style')).toContain('width: 800px')

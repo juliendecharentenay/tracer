@@ -4,8 +4,8 @@ import { reactive, ref } from 'vue'
 import ElementTree from './ElementTree.vue'
 
 describe('ElementTree', () => {
-  function createWrapper(paths = [], extra = {}) {
-    const state = reactive({
+  function makeState(paths = []) {
+    return reactive({
       canvas: {
         svg: {
           points: [],
@@ -14,7 +14,9 @@ describe('ElementTree', () => {
         }
       }
     })
+  }
 
+  function createWrapper(state = makeState(), extra = {}) {
     return mount(ElementTree, {
       global: {
         provide: {
@@ -38,7 +40,7 @@ describe('ElementTree', () => {
       { type: 'line', points: [0, 1], controlPoints: [] },
       { type: 'cubicBezier', points: [1, 2], controlPoints: [0, 1] }
     ]
-    const wrapper = createWrapper(paths)
+    const wrapper = createWrapper(makeState(paths))
     const items = wrapper.findAll('li')
     expect(items).toHaveLength(2)
   })
@@ -48,7 +50,7 @@ describe('ElementTree', () => {
       { type: 'line', points: [0, 1], controlPoints: [] },
       { type: 'cubicBezier', points: [1, 2], controlPoints: [0, 1] }
     ]
-    const wrapper = createWrapper(paths)
+    const wrapper = createWrapper(makeState(paths))
     expect(wrapper.text()).toContain('[0]')
     expect(wrapper.text()).toContain('line')
     expect(wrapper.text()).toContain('[1]')
@@ -56,21 +58,8 @@ describe('ElementTree', () => {
   })
 
   it('reactively updates when paths are added', async () => {
-    const state = reactive({
-      canvas: {
-        svg: {
-          points: [],
-          controlPoints: [],
-          paths: []
-        }
-      }
-    })
-
-    const wrapper = mount(ElementTree, {
-      global: {
-        provide: { state }
-      }
-    })
+    const state = makeState()
+    const wrapper = createWrapper(state)
 
     expect(wrapper.text()).toContain('No paths yet')
 
@@ -82,24 +71,11 @@ describe('ElementTree', () => {
   })
 
   it('reactively updates when paths are removed', async () => {
-    const state = reactive({
-      canvas: {
-        svg: {
-          points: [],
-          controlPoints: [],
-          paths: [
+    const state = makeState([
             { type: 'line', points: [0, 1], controlPoints: [] },
             { type: 'cubicBezier', points: [1, 2], controlPoints: [0, 1] }
-          ]
-        }
-      }
-    })
-
-    const wrapper = mount(ElementTree, {
-      global: {
-        provide: { state }
-      }
-    })
+          ])
+    const wrapper = createWrapper(state)
 
     expect(wrapper.findAll('li')).toHaveLength(2)
 
@@ -112,7 +88,7 @@ describe('ElementTree', () => {
   describe('hover and selection styling', () => {
     it('does not apply font-bold when entry is neither hovered nor selected', () => {
       const paths = [{ type: 'line', points: [0, 1], controlPoints: [] }]
-      const wrapper = createWrapper(paths, {
+      const wrapper = createWrapper(makeState(paths), {
         hoveredPathIndex:  ref(null),
         selectedPathIndex: ref(null),
       })
@@ -125,7 +101,7 @@ describe('ElementTree', () => {
         { type: 'line', points: [0, 1], controlPoints: [] },
         { type: 'line', points: [1, 2], controlPoints: [] }
       ]
-      const wrapper = createWrapper(paths, {
+      const wrapper = createWrapper(makeState(paths), {
         hoveredPathIndex:  ref(0),
         selectedPathIndex: ref(null),
       })
@@ -139,7 +115,7 @@ describe('ElementTree', () => {
         { type: 'line', points: [0, 1], controlPoints: [] },
         { type: 'line', points: [1, 2], controlPoints: [] }
       ]
-      const wrapper = createWrapper(paths, {
+      const wrapper = createWrapper(makeState(paths), {
         hoveredPathIndex:  ref(null),
         selectedPathIndex: ref(1),
       })
@@ -153,7 +129,7 @@ describe('ElementTree', () => {
         { type: 'line', points: [0, 1], controlPoints: [] },
         { type: 'line', points: [1, 2], controlPoints: [] }
       ]
-      const wrapper = createWrapper(paths, {
+      const wrapper = createWrapper(makeState(paths), {
         hoveredPathIndex:  ref(0),
         selectedPathIndex: ref(1),
       })
@@ -170,7 +146,7 @@ describe('ElementTree', () => {
         { type: 'line', points: [0, 1], controlPoints: [] },
         { type: 'line', points: [1, 2], controlPoints: [] }
       ]
-      const wrapper = createWrapper(paths, { setHoveredPathIndex })
+      const wrapper = createWrapper(makeState(paths), { setHoveredPathIndex })
       const items = wrapper.findAll('li')
       items[1].trigger('mouseenter')
       expect(setHoveredPathIndex).toHaveBeenCalledWith(1)
@@ -179,7 +155,7 @@ describe('ElementTree', () => {
     it('calls setHoveredPathIndex(null) on mouseleave', () => {
       const setHoveredPathIndex = vi.fn()
       const paths = [{ type: 'line', points: [0, 1], controlPoints: [] }]
-      const wrapper = createWrapper(paths, { setHoveredPathIndex })
+      const wrapper = createWrapper(makeState(paths), { setHoveredPathIndex })
       const item = wrapper.find('li')
       item.trigger('mouseleave')
       expect(setHoveredPathIndex).toHaveBeenCalledWith(null)
